@@ -2,10 +2,6 @@
 #include <vector>
 #include <cmath>
 
-
-//Global Variables
-
-
 class base
 {
    public:
