@@ -1,28 +1,31 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-using namespace std;
+
 
 //Global Variables
-int M_ref;
-const static double TDDFrame = 20;
-const static int NoSym = 14;
-int subcarrierSpacing;
+
 
 class base
 {
    public:
-   void printFrame(int a, int b , int c , vector<char>& d);
-   void printFlex(int a , int b ,int c,int d , int e , vector<char>& f, int g);
+   void printFrame(int a, int b , int c , std::vector<char>& d);
+   void printFlex(int a , int b ,int c,int d , int e , std::vector<char>& f, int g);
    void calculateM_ref(int x, double z);
 
    protected:
+   constexpr static double TDDFrame = 20;
+    constexpr static int NoSym = 14;
+   int subcarrierSpacing;
    void setM_ref(int m_ref) {
        M_ref = m_ref;
    }
    int getM_ref() const {
        return M_ref;
    }
+   private:
+    int M_ref;
+   
 };
 
 class pattern1 : public base
@@ -165,26 +168,26 @@ void base::calculateM_ref(int x, double z)
             if (z == 2.5)
                 setM_ref(1);
             else
-                std::cout << "Invalid sub-carrier spacing!" << endl;
+                std::cout << "Invalid sub-carrier spacing!\n";
             break;
         case 60:
             if (z == 1.25 || z == 2.5)
                 setM_ref(2);
             else
-                std::cout << "Invalid sub-carrier spacing!" << endl;
+                std::cout << "Invalid sub-carrier spacing!\n";
             break;
         case 120:
             if (z == 0.625 || z == 1.25 || z == 2.5)
                 setM_ref(3);
             else
-                std::cout << "Invalid sub-carrier spacing!" << endl;
+                std::cout << "Invalid sub-carrier spacing!\n";
             break;
         default:
             std::cout << "Invalid sub-carrier spacing!\n";
     }
 }
 
-void base::printFrame(int a, int b, int c, vector<char>& d)
+void base::printFrame(int a, int b, int c, std::vector<char>& d)
 {
     if (a + b <= c)
     {
@@ -210,11 +213,11 @@ void base::printFrame(int a, int b, int c, vector<char>& d)
     }
     else
     {
-        std::cout << "invalid number for uplink and downlink slots " << endl;
+        std::cout << "invalid number for uplink and downlink slots " << "\n";
     }
 }
 
-void base::printFlex(int a, int b, int c, int d, int e, vector<char>& f, int g)
+void base::printFlex(int a, int b, int c, int d, int e, std::vector<char>& f, int g)
 {
     int flexSym = (a - b - c) * NoSym - d - e; // a= No. of slots , b= uplink slots , c= downlink slots , d= uplink sym , e= downlink sym , g= no. of flex. slots
     if (d + e <= a * NoSym)
@@ -252,26 +255,25 @@ void pattern1::calculateNumberOfSlots() {
     if ((fmod(TDDFrame, getPeriodicity()) == 0.0))
     {
         setNumberOfSlots(getPeriodicity() * pow(2, getM_ref()));
-        std::cout << "Number of slots (S): " << getNumberOfSlots() << endl;
+        std::cout << "Number of slots (S): " << getNumberOfSlots() << "\n";
     }
     else
     {
-        std::cout << "Invalid periodicity!" << endl;
+        std::cout << "Invalid periodicity!" << "\n";
     }
 
 }
 
 void pattern2::calculateNumberOfSlots_2(double y) {
-    if ((fmod(TDDFrame, y) == 0.0))
+    if (fmod(TDDFrame, y) == 0.0)
     {
-        setNumberOfSlots(getPeriodicity() * pow(2, getM_ref()));
-        std::cout << "Number of slots (S_2): " << getNumberOfSlots() << endl;
+;        setNumberOfSlots(getPeriodicity() * pow(2, getM_ref())); 
+        std::cout << "Number of slots (S_2): " << getNumberOfSlots() << "\n";
     }
     else
     {
-        std::cout << "Invalid periodicity!" << endl;
+        std::cout << "Invalid periodicity!" << "\n";
     }
-
 }
 
 int main()
@@ -292,7 +294,6 @@ int main()
     std::cin >> subcarrierSpacing;
 
     first.calculateM_ref(subcarrierSpacing, first.getPeriodicity());
-
     first.calculateNumberOfSlots();
 
     std::cout << "Enter downlink number of slots: ";
@@ -321,7 +322,8 @@ int main()
     std::cin >> periodicity2;
     second.setPeriodicity(periodicity2);
 
-    double slot_config_period = first.getPeriodicity() + second.getPeriodicity();
+    double slot_config_period = periodicity1 + periodicity2;
+    second.calculateM_ref(subcarrierSpacing, second.getPeriodicity());
     second.calculateNumberOfSlots_2(slot_config_period);
 
     std::cout << "Enter downlink number of slots: ";
@@ -359,4 +361,3 @@ int main()
 
     return 0;
 }
-
