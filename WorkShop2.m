@@ -7,43 +7,92 @@ function main()
     % Get user inputs
     PNSeqType = input('Enter the PN sequence type (23, 15, 11): ');
     SamplesPerFrameNum = input('Enter the Samples per frame (divisible by all bps for all modulations): ');
+    operation = input('what do you want to do? (1- see ber with no impairments 2- CP 3- impairmants 4- conv): ');
 
-    % Calculate BER for all modulation types
-    [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum);
+    switch(operation)
+        case 1
+            action = 1;
+            % Calculate BER for all modulation types
+            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum,action);
+        
+            % Call the plot function
+            plot_ber(snrValues, berResults, modTypes);
+        case 2
 
-    % Call the plot function
-    plot_ber(snrValues, berResults, modTypes);
+        case 3
+            actoin =2;
+            % Calculate BER for all modulation types
+            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum,action);
+        
+            % Call the plot function
+            plot_ber(snrValues, berResults, modTypes);
+
+
+        case 4
+            actoin =3;
+            % Calculate BER for all modulation types
+            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum,action);
+        
+            % Call the plot function
+            plot_ber(snrValues, berResults, modTypes);
+    end
+
 end
 
-function [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum)
+function [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum,action)
     % Define modulation types and SNR values
     modTypes = {'BPSK', 'QPSK', '16QAM', '64QAM'};
     snrValues = 0:1:90; % Use smaller increments for smoother curves
 
     % Initialize results storage
     berResults = cell(length(modTypes), 1);
+    switch action
+        case 1
+            % Run the modulation simulation for each modulation type
+            for j = 1:length(modTypes)
+                berValues = zeros(size(snrValues));
+                modType = modTypes{j};
+                for i = 1:length(snrValues)
+                    [number, ratio] = run_modulation_simulation_no_impairments(modType, PNSeqType, SamplesPerFrameNum, snrValues(i));
+                    berValues(i) = ratio;
+                end
+                berResults{j} = berValues; % Store results
+            end
 
-    % Run the modulation simulation for each modulation type
-    for j = 1:length(modTypes)
-        berValues = zeros(size(snrValues));
-        modType = modTypes{j};
-        for i = 1:length(snrValues)
-            [number, ratio] = run_modulation_simulation(modType, PNSeqType, SamplesPerFrameNum, snrValues(i));
-            berValues(i) = ratio;
-        end
-        berResults{j} = berValues; % Store results
+
+        case 2
+            % Run the modulation simulation for each modulation type
+            for j = 1:length(modTypes)
+                berValues = zeros(size(snrValues));
+                modType = modTypes{j};
+                for i = 1:length(snrValues)
+                    [number, ratio] = run_modulation_simulation_impairments(modType, PNSeqType, SamplesPerFrameNum, snrValues(i));
+                    berValues(i) = ratio;
+                end
+                berResults{j} = berValues; % Store results
+            end
+
+        case 3 
+            % Run the modulation simulation for each modulation type
+            for j = 1:length(modTypes)
+                berValues = zeros(size(snrValues));
+                modType = modTypes{j};
+                for i = 1:length(snrValues)
+                    [number, ratio] = run_modulation_simulation_conv(modType, PNSeqType, SamplesPerFrameNum, snrValues(i));
+                    berValues(i) = ratio;
+                end
+                berResults{j} = berValues; % Store results
+            end
+
     end
 end
 
-function [number, ratio] = run_modulation_simulation(modType, PNSeqType, SamplesPerFrame, SNR)
+
+function [number, ratio] = run_modulation_simulation_no_impairments(modType, PNSeqType, SamplesPerFrame, SNR)
     % Generate PN Sequence
     [InPutStream, Scrambler, descrambler] = generate_pn_sequence(PNSeqType, SamplesPerFrame);
-    
 
-    % Convolutional Encoding
-    convencoder = comm.ConvolutionalEncoder;
-    codeword = convencoder(InPutStream);
-    ScrambledOut = Scrambler(codeword);
+    ScrambledOut = Scrambler(InPutStream);
     
     % Modulate Signal
     [modulator, demodulator] = select_modulation_scheme(modType);
@@ -60,10 +109,66 @@ function [number, ratio] = run_modulation_simulation(modType, PNSeqType, Samples
     % Descramble Received Signal
     DeScrambledReceived = descrambler(DemodulatedSignal);
     
+    % Calculate Bit Error Rate
+    [number, ratio] = calculate_ber_from_signals(InPutStream, DeScrambledReceived);
+end
+
+
+function [number, ratio] = run_modulation_simulation_impairments(modType, PNSeqType, SamplesPerFrame, SNR)
+    % Generate PN Sequence
+    [InPutStream, Scrambler, descrambler] = generate_pn_sequence(PNSeqType, SamplesPerFrame);
+
+    ScrambledOut = Scrambler(InPutStream);
+    
+    % Modulate Signal
+    [modulator, demodulator] = select_modulation_scheme(modType);
+    ModulatedSignal = modulator(ScrambledOut);
+
+    % Pass through Channel (AWGN)
+    ModulatedSignalifft = ifft(ModulatedSignal);
+    ModulatedSignalAfterChannel = awgn(ModulatedSignalifft, SNR);
+
+    % Demodulate Signal
+    fftSignal = fft(ModulatedSignalAfterChannel);
+    DemodulatedSignal = demodulator(fftSignal);
+
+    % Descramble Received Signal
+    DeScrambledReceived = descrambler(DemodulatedSignal);
+    
+    % Calculate Bit Error Rate
+    [number, ratio] = calculate_ber_from_signals(InPutStream, DeScrambledReceived);
+end
+
+
+function [number, ratio] = run_modulation_simulation_conv(modType, PNSeqType, SamplesPerFrame, SNR)
+    % Generate PN Sequence
+    [InPutStream, Scrambler, descrambler] = generate_pn_sequence(PNSeqType, SamplesPerFrame);
+
+
+    % Convolutional Encoding
+    convencoder = comm.ConvolutionalEncoder;
+    codeword = convencoder(InPutStream);
+    ScrambledOut = Scrambler(codeword);
+
+    % Modulate Signal
+    [modulator, demodulator] = select_modulation_scheme(modType);
+    ModulatedSignal = modulator(ScrambledOut);
+
+    % Pass through Channel (AWGN)
+    ModulatedSignalifft = ifft(ModulatedSignal);
+    ModulatedSignalAfterChannel = awgn(ModulatedSignalifft, SNR);
+
+    % Demodulate Signal
+    fftSignal = fft(ModulatedSignalAfterChannel);
+    DemodulatedSignal = demodulator(fftSignal);
+
+    % Descramble Received Signal
+    DeScrambledReceived = descrambler(DemodulatedSignal);
+
     % Viterbi Decoder
     viterbidecoder = comm.ViterbiDecoder;
     decmsg = viterbidecoder(DeScrambledReceived);
-    
+
     % Calculate Bit Error Rate
     [number, ratio] = calculate_ber_from_signals(InPutStream, decmsg);
 end
