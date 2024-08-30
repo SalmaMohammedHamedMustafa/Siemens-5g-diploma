@@ -1,3 +1,4 @@
+
 clear;
 close all;
 main();
@@ -37,8 +38,13 @@ end
 function [number, ratio] = run_modulation_simulation(modType, PNSeqType, SamplesPerFrame, SNR)
     % Generate PN Sequence
     [InPutStream, Scrambler, descrambler] = generate_pn_sequence(PNSeqType, SamplesPerFrame);
-    ScrambledOut = Scrambler(InPutStream);
+    
 
+    % Convolutional Encoding
+    convencoder = comm.ConvolutionalEncoder;
+    codeword = convencoder(InPutStream);
+    ScrambledOut = Scrambler(codeword);
+    
     % Modulate Signal
     [modulator, demodulator] = select_modulation_scheme(modType);
     ModulatedSignal = modulator(ScrambledOut);
@@ -53,9 +59,13 @@ function [number, ratio] = run_modulation_simulation(modType, PNSeqType, Samples
 
     % Descramble Received Signal
     DeScrambledReceived = descrambler(DemodulatedSignal);
-
+    
+    % Viterbi Decoder
+    viterbidecoder = comm.ViterbiDecoder;
+    decmsg = viterbidecoder(DeScrambledReceived);
+    
     % Calculate Bit Error Rate
-    [number, ratio] = calculate_ber_from_signals(InPutStream, DeScrambledReceived);
+    [number, ratio] = calculate_ber_from_signals(InPutStream, decmsg);
 end
 
 function [InPutStream, Scrambler, descrambler] = generate_pn_sequence(PNSeqType, SamplesPerFrame)
