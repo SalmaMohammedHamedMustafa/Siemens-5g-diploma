@@ -66,22 +66,19 @@ function [number, ratio] = pn_sequence_modulation(modType, PNSeqType, SamplesPer
 end
 
 function main()
-    % Get user inputs
-    PNSeqType = input('Enter the PN sequence type (23, 15, 11): ');
-    SamplesPerFrameNum = input('Enter the Samples per frame (divisible by all bps for all modulaitons): ');
 
-    % Calculate BER for all modulation types
-    [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum);
-
+    calculate_ber();
     % Call the plot function
     plot_ber(snrValues, berResults, modTypes);
 end
 
-function [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum)
+function calculate_ber()
     % Define modulation types and SNR values
     modTypes = {'BPSK', 'QPSK', '16QAM', '64QAM'};
-    snrValues = 0:1:90; % Use smaller increments for smoother curves
-
+    PNSeqType = input('Enter the PN sequence type (23, 15, 11): ');
+    SamplesPerFrameNum = input('Enter the Samples per frame (divisible by 2): ');
+    snrValues = 0:1:; % Use smaller increments for smoother curves
+    
     % Initialize results storage
     berResults = cell(length(modTypes), 1);
 
@@ -96,7 +93,6 @@ function [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPer
         berResults{j} = berValues; % Store results
     end
 end
-
 
 function plot_ber(snrValues, berResults, modTypes)
     % Plot BER vs. SNR for Different Modulation Schemes
