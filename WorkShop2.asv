@@ -1,4 +1,3 @@
-
 clear;
 close all;
 main();
@@ -7,37 +6,103 @@ function main()
     % Get user inputs
     PNSeqType = input('Enter the PN sequence type (23, 15, 11): ');
     SamplesPerFrameNum = input('Enter the Samples per frame (divisible by all bps for all modulations): ');
-    operation = input('what do you want to do? (1- see ber with no impairments 2- CP 3- impairmants 4- conv)');
+    operation = input('What do you want to do? (1- see BER with no impairments 2- CP 3- impairments 4- conv): ');
 
-    switch(operation)
+    switch operation
         case 1
             action = 1;
             % Calculate BER for all modulation types
-            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum,action);
+            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum, action);
         
             % Call the plot function
             plot_ber(snrValues, berResults, modTypes);
         case 2
-
+            CPLength = input('Enter CP length: ');
+            run_cp_for_all_modulations(PNSeqType, SamplesPerFrameNum, CPLength);
         case 3
-            actoin =2;
-            % Calculate BER for all modulation types
-            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum,action);
+            action = 2;
+            % Calculate BER for all modulation types with impairments
+            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum, action);
         
             % Call the plot function
             plot_ber(snrValues, berResults, modTypes);
-
-
         case 4
-            actoin =3;
-            % Calculate BER for all modulation types
-            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum,action);
+            action = 3;
+            % Calculate BER for all modulation types with convolutional encoding
+            [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum, action);
         
             % Call the plot function
             plot_ber(snrValues, berResults, modTypes);
     end
-
 end
+
+function run_cp_for_all_modulations(PNSeqType, SamplesPerFrameNum, CPLength)
+    % Define SNR
+    SNR = 10;  % Example SNR value in dB
+    
+    % Channel impulse responses
+    h1 = [2, 2.5, 3];
+    h2 = [10, 2, 1.5];
+    
+    % Define modulation types
+    modTypes = {'BPSK', 'QPSK', '16QAM', '64QAM'};
+    
+    % Iterate through each modulation type
+    for j = 1:length(modTypes)
+        modType = modTypes{j};
+        
+        % Generate PN Sequence
+        [InPutStream, Scrambler, descrambler] = generate_pn_sequence(PNSeqType, SamplesPerFrameNum);
+        ScrambledOut = Scrambler(InPutStream);
+
+        % Select modulation scheme
+        [modulator, demodulator] = select_modulation_scheme(modType);
+        
+        % Modulate Signal
+        ModulatedSignal = modulator(ScrambledOut);
+        scatterplot()
+
+        % IFFT Operation
+        ModulatedSignalIFFT = ifft(ModulatedSignal);
+
+        % Adding Cyclic Prefix
+        txout = ModulatedSignalIFFT(:);
+        txcp = txout(end-CPLength+1:end);
+        txout_cp = [txcp; txout];
+
+        % Apply channel effect using convolution
+        channelOutput1 = conv(txout_cp, h1, 'same');
+        channelOutput2 = conv(txout_cp, h2, 'same');
+        
+        % Pass through Channel (AWGN)
+        ModulatedSignalAfterChannel1 = awgn(channelOutput1, SNR);
+        ModulatedSignalAfterChannel2 = awgn(channelOutput2, SNR);
+
+        % Remove Cyclic Prefix
+        rxout1 = ModulatedSignalAfterChannel1(CPLength+1:end);
+        rxout2 = ModulatedSignalAfterChannel2(CPLength+1:end);
+
+        % FFT Operation
+        fftSignal1 = fft(rxout1);
+        fftSignal2 = fft(rxout2);
+
+        % Demodulate Signal
+        DemodulatedSignal1 = demodulator(fftSignal1);
+        DemodulatedSignal2 = demodulator(fftSignal2);
+
+        % Descramble Received Signal
+        DeScrambledReceived1 = descrambler(DemodulatedSignal1);
+        DeScrambledReceived2 = descrambler(DemodulatedSignal2);
+
+        % Calculate Bit Error Rate
+        [number1, ratio1] = calculate_ber_from_signals(InPutStream, DeScrambledReceived1);
+        [number2, ratio2] = calculate_ber_from_signals(InPutStream, DeScrambledReceived2);
+
+        % Display BER for each channel
+        fprintf('Modulation: %s | Channel h1 BER: %f | Channel h2 BER: %f\n', modType, ratio1, ratio2);
+    end
+end
+
 
 function [snrValues, berResults, modTypes] = calculate_ber(PNSeqType, SamplesPerFrameNum,action)
     % Define modulation types and SNR values
