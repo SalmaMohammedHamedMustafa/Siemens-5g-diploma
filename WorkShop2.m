@@ -217,11 +217,16 @@ function [number, ratio] = run_modulation_simulation_conv(modType, PNSeqType, Sa
     % Convolutional Encoding
     convencoder = comm.ConvolutionalEncoder;
     codeword = convencoder(InPutStream);
+    
+    % Scrambler
     ScrambledOut = Scrambler(codeword);
 
+    % Interleaver
+    InterleavedSignal = intrlv(ScrambledOut);
+    
     % Modulate Signal
     [modulator, demodulator] = select_modulation_scheme(modType);
-    ModulatedSignal = modulator(ScrambledOut);
+    ModulatedSignal = modulator(InterleavedSignal);
 
     % Pass through Channel (AWGN)
     ModulatedSignalifft = ifft(ModulatedSignal);
@@ -231,8 +236,11 @@ function [number, ratio] = run_modulation_simulation_conv(modType, PNSeqType, Sa
     fftSignal = fft(ModulatedSignalAfterChannel);
     DemodulatedSignal = demodulator(fftSignal);
 
+    % Deinterleaver
+    DeinterleavedSignal = deintrlv(DemodulatedSignal);
+    
     % Descramble Received Signal
-    DeScrambledReceived = descrambler(DemodulatedSignal);
+    DeScrambledReceived = descrambler(DeinterleavedSignal);
 
     % Viterbi Decoder
     viterbidecoder = comm.ViterbiDecoder;
