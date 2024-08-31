@@ -6,7 +6,7 @@ function main()
     % Get user inputs
     PNSeqType = input('Enter the PN sequence type (23, 15, 11): ');
     SamplesPerFrameNum = input('Enter the Samples per frame (divisible by all bps for all modulations): ');
-    operation = input('What do you want to do? (1- see BER with no impairments 2- CP 3- impairments 4- conv): ');
+    operation = input('What do you want to test? (1-BER with no impairments  2-CP  3-BER with impairments  4-conv): ');
 
     switch operation
         case 1
@@ -192,22 +192,33 @@ function [number, ratio] = run_modulation_simulation_impairments(modType, PNSeqT
     % Modulate Signal
     [modulator, demodulator] = select_modulation_scheme(modType);
     ModulatedSignal = modulator(ScrambledOut);
+    %ifft
+    ModulatedSignalifft = ifft(ModulatedSignal);
 
     % Pass through Channel (AWGN)
-    ModulatedSignalifft = ifft(ModulatedSignal);
-    ModulatedSignalAfterChannel = awgn(ModulatedSignalifft, SNR);
-
+    ModulatedSignalifftAWGN = awgn(ModulatedSignalifft, SNR); %AWGN
+    % Define frequency offset parameters
+    frequencyOffset = 1000; % Frequency offset in Hz
+    time = (0:length(ModulatedSignalifftAWGN)-1) / SamplesPerFrame;
+    frequencyOffsetSignal = exp(1j * 2 * pi * frequencyOffset * time.');
+    channelDelay = dsp.Delay(1);
+    % Apply frequency offset to the modulated signal
+    ModulatedSignalifftAWGNWithOffset = ModulatedSignalifftAWGN .* frequencyOffsetSignal;
+    
+    % add delay
+    ModulatedSignalifftAWGNWithOffsetDelayed = channelDelay(ModulatedSignalifftAWGNWithOffset); % Add delay
+    
     % Demodulate Signal
-    fftSignal = fft(ModulatedSignalAfterChannel);
+    fftSignal = fft(ModulatedSignalifftAWGNWithOffsetDelayed);
     DemodulatedSignal = demodulator(fftSignal);
-
+    
     % Descramble Received Signal
     DeScrambledReceived = descrambler(DemodulatedSignal);
     
     % Calculate Bit Error Rate
     [number, ratio] = calculate_ber_from_signals(InPutStream, DeScrambledReceived);
-end
 
+end
 
 function [number, ratio] = run_modulation_simulation_conv(modType, PNSeqType, SamplesPerFrame, SNR)
     % Generate PN Sequence
@@ -227,9 +238,10 @@ function [number, ratio] = run_modulation_simulation_conv(modType, PNSeqType, Sa
     % Modulate Signal
     [modulator, demodulator] = select_modulation_scheme(modType);
     ModulatedSignal = modulator(InterleavedSignal);
+    %ifft
+    ModulatedSignalifft = ifft(ModulatedSignal);
 
     % Pass through Channel (AWGN)
-    ModulatedSignalifft = ifft(ModulatedSignal);
     ModulatedSignalAfterChannel = awgn(ModulatedSignalifft, SNR);
 
     % Demodulate Signal
