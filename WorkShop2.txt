@@ -1,0 +1,15 @@
+BER Vs SNR (no impairments):
+1. Overall Trend:
+
+    The BER decreases as the SNR increases for all modulation schemes. This is expected because higher SNR values mean less noise in the system, leading to fewer errors in the received signal.
+
+2. Performance Comparison:
+
+    BPSK (Binary Phase Shift Keying):
+        Has the best performance, as it requires the lowest SNR to achieve a certain BER. This is because BPSK has the highest noise immunity among the schemes shown.
+    QPSK (Quadrature Phase Shift Keying):
+        BER of QPSK is as in BPSK case because the distances between symbols on the signal space are the same. 
+    16QAM (16-Quadrature Amplitude Modulation):
+        Requires an even higher SNR than QPSK to achieve the same BER. This is due to the higher number of symbols (16), which makes the modulation scheme more susceptible to noise.
+    64QAM (64-Quadrature Amplitude Modulation):
+        Has the worst performance among the schemes shown. It requires the highest SNR to achieve a low BER. 64QAM carries more information per symbol than the other schemes but is also the most sensitive to noise.

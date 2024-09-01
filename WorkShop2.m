@@ -17,8 +17,16 @@ function main()
             % Call the plot function
             plot_ber(snrValues, berResults, modTypes);
         case 2
+            hChoice = input('which channel 1-[2 2.5 3]   2-[10 2 1.5]: ');
             CPLength = input('Enter CP length: ');
-            run_cp_for_all_modulations(PNSeqType, SamplesPerFrameNum, CPLength);
+            switch hChoice
+                case 1
+                    h = [2 2.5 3];
+                case 2
+                    h= [10 2 1.5];
+            end
+
+            run_cp_for_all_modulations(PNSeqType, SamplesPerFrameNum, CPLength,h);
         case 3
             action = 2;
             % Calculate BER for all modulation types with impairments
@@ -36,13 +44,11 @@ function main()
     end
 end
 
-function run_cp_for_all_modulations(PNSeqType, SamplesPerFrameNum, CPLength)
+function run_cp_for_all_modulations(PNSeqType, SamplesPerFrameNum,CPLength,h)
     % Define SNR
-    SNR = 50;  % Example SNR value in dB
+    SNR = 60;  % Example SNR value in dB
     
-    % Channel impulse responses
-    h1 = [2, 2.5, 3];
-    h2 = [10, 2, 1.5];
+  
     
     % Define modulation types
     modTypes = {'BPSK', 'QPSK', '16QAM', '64QAM'};
@@ -71,38 +77,36 @@ function run_cp_for_all_modulations(PNSeqType, SamplesPerFrameNum, CPLength)
         txout_cp = [txcp; txout];
 
         % Apply channel effect using convolution
-        channelOutput1 = conv(txout_cp, h1, 'same');
-        channelOutput2 = conv(txout_cp, h2, 'same');
+        channelOutput1 = conv(txout_cp, h, 'same');
+
         
         % Pass through Channel (AWGN)
         ModulatedSignalAfterChannel1 = awgn(channelOutput1, SNR);
-        ModulatedSignalAfterChannel2 = awgn(channelOutput2, SNR);
+
 
         % Remove Cyclic Prefix
         rxout1 = ModulatedSignalAfterChannel1(CPLength+1:end);
-        rxout2 = ModulatedSignalAfterChannel2(CPLength+1:end);
 
         % FFT Operation
         fftSignal1 = fft(rxout1);
-        fftSignal2 = fft(rxout2);
+
         
         %plot
         scatterplot(fftSignal1);
-        scatterplot(fftSignal2);
+
+
         % Demodulate Signal
         DemodulatedSignal1 = demodulator(fftSignal1);
-        DemodulatedSignal2 = demodulator(fftSignal2);
 
         % Descramble Received Signal
         DeScrambledReceived1 = descrambler(DemodulatedSignal1);
-        DeScrambledReceived2 = descrambler(DemodulatedSignal2);
 
          % Calculate Bit Error Rate
-        [number1, ratio1] = calculate_ber_from_signals(InPutStream, DeScrambledReceived1);
-        [number2, ratio2] = calculate_ber_from_signals(InPutStream, DeScrambledReceived2);
+        [number, ratio] = calculate_ber_from_signals(InPutStream, DeScrambledReceived1);
+
 
         % Display BER for each channel
-        fprintf('Modulation: %s | Channel h1 BER: %f | Channel h2 BER: %f\n', modType, ratio1, ratio2);
+        fprintf('Modulation: %s | Channel h1 BER: %f \n', modType, ratio);
     end
 end
 
@@ -231,9 +235,10 @@ function [number, ratio] = run_modulation_simulation_conv(modType, PNSeqType, Sa
     
     % Scrambler
     ScrambledOut = Scrambler(codeword);
+    elements = randperm(SamplesPerFrame*2);
 
     % Interleaver
-    InterleavedSignal = intrlv(ScrambledOut);
+    InterleavedSignal = intrlv(ScrambledOut,elements);
     
     % Modulate Signal
     [modulator, demodulator] = select_modulation_scheme(modType);
@@ -249,7 +254,7 @@ function [number, ratio] = run_modulation_simulation_conv(modType, PNSeqType, Sa
     DemodulatedSignal = demodulator(fftSignal);
 
     % Deinterleaver
-    DeinterleavedSignal = deintrlv(DemodulatedSignal);
+    DeinterleavedSignal = deintrlv(DemodulatedSignal,elements);
     
     % Descramble Received Signal
     DeScrambledReceived = descrambler(DeinterleavedSignal);
