@@ -8,7 +8,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Add the Ethernet source files
-include_directories(Ethernet)
 file(GLOB ETH_SRC Ethernet/*.cpp)
 
 # Create an executable
