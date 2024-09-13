@@ -1,0 +1,3 @@
+/home/salma/Siemens_5g_diploma/finalProject/build/CMakeFiles/EthernetApp.dir
+/home/salma/Siemens_5g_diploma/finalProject/build/CMakeFiles/edit_cache.dir
+/home/salma/Siemens_5g_diploma/finalProject/build/CMakeFiles/rebuild_cache.dir
