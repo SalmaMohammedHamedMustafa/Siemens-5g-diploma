@@ -1,1 +1,1 @@
-/usr/bin/c++ -g CMakeFiles/EthernetApp.dir/main.cpp.o CMakeFiles/EthernetApp.dir/Ethernet/Ethernet.cpp.o -o EthernetApp 
+/usr/bin/c++ CMakeFiles/EthernetApp.dir/main.cpp.o CMakeFiles/EthernetApp.dir/Ethernet/Ethernet.cpp.o -o EthernetApp 
