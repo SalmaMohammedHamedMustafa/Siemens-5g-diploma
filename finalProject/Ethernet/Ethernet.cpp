@@ -7,7 +7,7 @@
 Ethernet::Ethernet(std::string configFilePath): configFilePath(configFilePath){
 
     parseConfigFile();
-    calcCaptureSizePacket();
+    
 }
 
 void Ethernet::print() const {
@@ -22,9 +22,10 @@ void Ethernet::print() const {
     std::cout << "MaxPacketSize: " << MaxPacketSize << " bytes" << "\n";
     std::cout << "BurstSize: " << BurstSize <<"\n";
     std::cout << "BurstPeriodicity: " << BurstPeriodicity_us << " us\n";
+    std::cout << "PacketTransmissionTime: " << PacketTransmissionTime << " us\n";
+    std::cout << "BurstTransmissionTime: " << BurstTransmissionTime << " us\n";
+    std::cout << "TotalPacketsPerFrame: " << TotalPacketsPerFrame << " packets\n";
 }
-
-
 
 void Ethernet::parseConfigFile()
 {
@@ -65,30 +66,44 @@ void Ethernet::parseConfigFile()
             BurstSize = std::stoul(line.substr(line.find('=') + 1));
         } else if (line.find("Eth.BurstPeriodicity_us") == 0) {
             BurstPeriodicity_us = std::stoul(line.substr(line.find('=') + 1));
-        } else if (line.find("IFGByte") == 0) {
-            // Extract the hex value from the string
-            std::string hexValueStr = line.substr(line.find('=') + 1);
-            // Convert the hex string to an unsigned long
-            unsigned long hexValue = std::stoul(hexValueStr, nullptr, 16);
-            // Cast to uint8_t
-            IFGByte = static_cast<uint8_t>(hexValue);
-
-        } else if (line.find("PreambleandSFD") == 0) {
-            PreambleandSFD = std::stoull(line.substr(line.find('=') + 1), nullptr, 0); // Convert from hex
         }
     }
 
     configFile.close();
 }
 
-
-
 void Ethernet::calcCaptureSizePacket() {
-    CaptureSizePacket = (static_cast<uint64_t>(CaptureSizeMs) * 1000 / BurstPeriodicity_us) * BurstSize;
-
+    CaptureSizePacket = ((static_cast<uint64_t>(CaptureSizeMs) * 1000) / BurstPeriodicity_us) * BurstSize;
 }
 
-void Ethernet::generateFixed() const 
+void Ethernet::calcPacketTransmissionTime() {
+    // Convert line rate to bits per second
+    uint64_t lineRateBps = static_cast<uint64_t>(LineRate) * 1000000000;
+
+    // Calculate packet size in bits
+    uint64_t packetSizeBits = MaxPacketSize * 8;
+
+    // Calculate the transmission time of one packet in microseconds
+    PacketTransmissionTime = (static_cast<double>(packetSizeBits) / lineRateBps) * 1e6;
+}
+
+void Ethernet::calcBurstTransmissionTime() {
+    // Calculate the time to transmit a burst (BurstSize packets)
+    BurstTransmissionTime = BurstSize * (PacketTransmissionTime + (MinNumOfIFGsPerPacket * 96.0 / (LineRate * 1000.0)));
+}
+
+void Ethernet::calcPacketsPerFrame() {
+    // Each frame is CaptureSizeMs long
+    double frameDurationUs = static_cast<double>(CaptureSizeMs) * 1000.0;
+
+    // Calculate the total number of packets per frame
+    TotalPacketsPerFrame = static_cast<uint32_t>(frameDurationUs / BurstPeriodicity_us) * BurstSize;
+}
+
+void Ethernet::generateFixed() 
 {
-    
+    calcCaptureSizePacket();
+    calcPacketTransmissionTime();
+    calcBurstTransmissionTime();
+    calcPacketsPerFrame();
 }

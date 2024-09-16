@@ -13,7 +13,3 @@ Eth.MaxPacketSize = 1500 // Packet size in bytes, includes the preamble, SoP, SR
 Eth.BurstSize = 3 // Number of ethernet packets in one burst
 
 Eth.BurstPeriodicity_us = 100 // The periodicity of the burst in microseconds
-
-IFGByte = 0x07
-
-PreambleandSFD = 0xFB555555555555D5
