@@ -10,5 +10,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add the Ethernet source files
 file(GLOB ETH_SRC Ethernet/*.cpp)
 
+# Add the CRC source files (Assuming the CRC code is located in CRC/ directory)
+file(GLOB CRC_SRC CRC/*.cpp)
+
+# Include directories for Ethernet and CRC headers
+include_directories(Ethernet CRC)
+
 # Create an executable
-add_executable(EthernetApp main.cpp ${ETH_SRC})
+add_executable(EthernetApp main.cpp ${ETH_SRC} ${CRC_SRC})

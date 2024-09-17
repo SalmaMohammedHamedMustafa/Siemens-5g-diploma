@@ -129,6 +129,30 @@ EthernetApp/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/EthernetApp.dir/build.make CMakeFiles/EthernetApp.dir/build
 .PHONY : EthernetApp/fast
 
+CRC/CRC.o: CRC/CRC.cpp.o
+.PHONY : CRC/CRC.o
+
+# target to build an object file
+CRC/CRC.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EthernetApp.dir/build.make CMakeFiles/EthernetApp.dir/CRC/CRC.cpp.o
+.PHONY : CRC/CRC.cpp.o
+
+CRC/CRC.i: CRC/CRC.cpp.i
+.PHONY : CRC/CRC.i
+
+# target to preprocess a source file
+CRC/CRC.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EthernetApp.dir/build.make CMakeFiles/EthernetApp.dir/CRC/CRC.cpp.i
+.PHONY : CRC/CRC.cpp.i
+
+CRC/CRC.s: CRC/CRC.cpp.s
+.PHONY : CRC/CRC.s
+
+# target to generate assembly for a file
+CRC/CRC.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/EthernetApp.dir/build.make CMakeFiles/EthernetApp.dir/CRC/CRC.cpp.s
+.PHONY : CRC/CRC.cpp.s
+
 Ethernet/Ethernet.o: Ethernet/Ethernet.cpp.o
 .PHONY : Ethernet/Ethernet.o
 
@@ -186,6 +210,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... EthernetApp"
+	@echo "... CRC/CRC.o"
+	@echo "... CRC/CRC.i"
+	@echo "... CRC/CRC.s"
 	@echo "... Ethernet/Ethernet.o"
 	@echo "... Ethernet/Ethernet.i"
 	@echo "... Ethernet/Ethernet.s"

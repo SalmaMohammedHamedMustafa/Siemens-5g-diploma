@@ -81,7 +81,7 @@ void Ethernet::calcPacketTransmissionTime() {
     uint64_t lineRateBps = static_cast<uint64_t>(LineRate) * 1000000000;
 
     // Calculate packet size in bits
-    uint64_t packetSizeBits = MaxPacketSize * 8;
+    uint64_t packetSizeBits = MaxPacketSize * bitsInByte;
 
     // Calculate the transmission time of one packet in microseconds
     PacketTransmissionTime = (static_cast<double>(packetSizeBits) / lineRateBps) * 1e6;
@@ -89,7 +89,7 @@ void Ethernet::calcPacketTransmissionTime() {
 
 void Ethernet::calcBurstTransmissionTime() {
     // Calculate the time to transmit a burst (BurstSize packets)
-    BurstTransmissionTime = BurstSize * (PacketTransmissionTime + (MinNumOfIFGsPerPacket * 96.0 / (LineRate * 1000.0)));
+    BurstTransmissionTime = BurstSize * (PacketTransmissionTime + (MinNumOfIFGsPerPacket * (MinNumOfIFGsPerPacket*bitsInByte) / (LineRate * 1000.0)));
 }
 
 void Ethernet::calcPacketsPerFrame() {

@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/salma/Siemens_5g_diploma/finalProject/CRC/CRC.cpp" "CMakeFiles/EthernetApp.dir/CRC/CRC.cpp.o" "gcc" "CMakeFiles/EthernetApp.dir/CRC/CRC.cpp.o.d"
   "/home/salma/Siemens_5g_diploma/finalProject/Ethernet/Ethernet.cpp" "CMakeFiles/EthernetApp.dir/Ethernet/Ethernet.cpp.o" "gcc" "CMakeFiles/EthernetApp.dir/Ethernet/Ethernet.cpp.o.d"
   "/home/salma/Siemens_5g_diploma/finalProject/main.cpp" "CMakeFiles/EthernetApp.dir/main.cpp.o" "gcc" "CMakeFiles/EthernetApp.dir/main.cpp.o.d"
   )

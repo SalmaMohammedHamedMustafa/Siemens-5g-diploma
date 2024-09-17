@@ -81,12 +81,12 @@ clean: CMakeFiles/EthernetApp.dir/clean
 CMakeFiles/EthernetApp.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/EthernetApp.dir/build.make CMakeFiles/EthernetApp.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/EthernetApp.dir/build.make CMakeFiles/EthernetApp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/salma/Siemens_5g_diploma/finalProject/build/CMakeFiles --progress-num=1,2,3 "Built target EthernetApp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/salma/Siemens_5g_diploma/finalProject/build/CMakeFiles --progress-num=1,2,3,4 "Built target EthernetApp"
 .PHONY : CMakeFiles/EthernetApp.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/EthernetApp.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/salma/Siemens_5g_diploma/finalProject/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/salma/Siemens_5g_diploma/finalProject/build/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/EthernetApp.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/salma/Siemens_5g_diploma/finalProject/build/CMakeFiles 0
 .PHONY : CMakeFiles/EthernetApp.dir/rule

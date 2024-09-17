@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/EthernetApp.dir/CRC/CRC.cpp.o"
+  "CMakeFiles/EthernetApp.dir/CRC/CRC.cpp.o.d"
   "CMakeFiles/EthernetApp.dir/Ethernet/Ethernet.cpp.o"
   "CMakeFiles/EthernetApp.dir/Ethernet/Ethernet.cpp.o.d"
   "CMakeFiles/EthernetApp.dir/main.cpp.o"

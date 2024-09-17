@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include "../CRC/CRC.hpp"
 
 class Ethernet 
 {
@@ -12,13 +13,15 @@ class Ethernet
         void generateFixed();
 
     private:
+        CRC crc;
+        static constexpr float bitsInByte = 8;
         std::string configFilePath;
         uint32_t LineRate; // in GB
         uint32_t CaptureSizeMs; // in ms
         uint32_t CaptureSizePacket; //number of packets in capture time
         uint32_t MinNumOfIFGsPerPacket; 
-        const uint8_t IFGByte = 0x07;
-        const uint64_t PreambleandSFD = 0xFB555555555555D5;
+        static constexpr  uint8_t IFGByte = 0x07;
+        static constexpr uint64_t PreambleandSFD = 0xFB555555555555D5;
         uint64_t DestAddress; 
         uint64_t SourceAddress;
         uint32_t MaxPacketSize; // total packet size in bytes
@@ -34,5 +37,6 @@ class Ethernet
         void calcCaptureSizePacket();
         void parseConfigFile();
 };
+
 
 #endif // ETHERNET_HPP
