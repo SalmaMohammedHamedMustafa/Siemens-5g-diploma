@@ -1,6 +1,4 @@
 #include "CRC.hpp"
-#include <iomanip>
-#include <sstream>
 #include <iostream>
 
 CRC::CRC() {
@@ -61,12 +59,3 @@ bool CRC::verifyCRC(const std::vector<uint8_t>& packet) {
     // Compare calculated CRC with extracted CRC
     return extractedCRC == calculatedCRC;
 }
-
-void CRC::printPacket(const std::vector<uint8_t>& packet) {
-    std::ostringstream oss;
-    for (const auto& byte : packet) {
-        oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte) << " ";
-    }
-    std::cout << "Packet: " << oss.str() << std::endl;
-}
-
