@@ -2,11 +2,24 @@
 #include "socket_handler/socket_handler.hpp"
 #include <iostream>
 
+void sendFile();
+
 int main() {
     // Create an Ethernet object and generate data
     Ethernet eth("../Ethernet/EthernetConfig.txt");
     eth.generate();
+    sendFile();
+    return 0;
+}
 
+
+
+
+
+
+
+
+void sendFile() {
     // Create a TCP server socket on port 8080
     TcpServerSocket server(8080);
 
@@ -28,6 +41,4 @@ int main() {
         
         std::cout << "File sent successfully!" << std::endl;
     }
-
-    return 0;
 }
