@@ -2,6 +2,6 @@
 int main() {
     
     Ethernet eth("../Ethernet/EthernetConfig.txt");
-    eth.generateFixed();
+    eth.generate();
     return 0;
 }

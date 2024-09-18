@@ -1,10 +1,15 @@
 #ifndef ETHERNET_HPP
 #define ETHERNET_HPP
 
+#define MILESTONE_1  // Uncomment this for Milestone 1
+//#define MILESTONE_2  // Uncomment this for Milestone 2
+
 #include <cstdint>
 #include <string>
 #include <vector>
 #include "../CRC/CRC.hpp"
+
+
 
 class Ethernet 
 {
@@ -14,10 +19,12 @@ class Ethernet
         @param: configFilePath: path to the configuration file
         */
         Ethernet(std::string configFilePath);
+
         /*
-        @prief: function to generate the packets in fixed mode and write them to the output file
+        @prief: function to generate Ethernet packets
         */
-        void generateFixed();
+        void generate();
+        
 
     private:
         CRC crc; // CRC object
@@ -36,8 +43,8 @@ class Ethernet
         static constexpr uint32_t MinPayloadSize = MinPacketSize - (PreambleNumBytes + DestAddressNumBytes + SourceAddressNumBytes + EtherTypeNumBytes + CRCNumBytes);
         enum class PacketType
         {
-            DummyPacket = 0,
-            RandomPacket = 1
+            RandomPacket = 0,
+            FixedPacket = 1
         }; // Enum to differentiate between the packet types
 
         std::string configFilePath; // path to the configuration file
@@ -50,6 +57,9 @@ class Ethernet
         uint64_t SourceAddress; // Source MAC address
         uint32_t MaxPacketSize; // total packet size in bytes
         uint32_t MaxPayloadSize ; // maximum payload size in bytes
+
+        #ifdef MILESTONE_1
+        // Milestone 1 configuration parameters
         uint32_t payloadSize;// payload size in bytes
         uint32_t BurstSize; // Number of ethernet packets in one burst
         uint32_t BurstPeriodicity_us; // The periodicity of the burst in microseconds
@@ -60,6 +70,16 @@ class Ethernet
         uint32_t IFGBytesAtEndOfBurst; // Number of IFG bytes at the end of the burst
         uint64_t totalNumOfBytes; // Total number of bytes transmitted
         double bytesPerMicrosecond; // Number of bytes transmitted per microsecond
+        #endif
+
+        #ifdef MILESTONE_2
+        /* ORAN configuration parameters */
+        uint32_t Oran_SCS; // Subcarrier Spacing
+        uint32_t Oran_MaxNrb; // Maximum number of resource blocks
+        uint32_t Oran_NrbPerPacket; // Number of resource blocks per packet
+        std::string Oran_PayloadType; // Random or fixed
+        std::string Oran_Payload; // Filename of payload, if fixed
+        #endif
 
 
         /*calculations*/
@@ -81,7 +101,8 @@ class Ethernet
         void print() const; //print the configuration parameters for debugging
         void hande4ByteAlignment(std::ofstream& outputFile); // handle the 4 byte alignment and add the IFG padding if not aligned
 
-        /*fixed mode functions*/
+        /*Random mode functions*/
+        void generateRandom(); // generate the packets in Random mode and write them to the output file
         void parseConfigFile(); //parse the configuration file
         void generateBurst(std::ofstream& outputFile); // generate a burst of packets
         void writeDummyPacketsToFile(std::ofstream& outputFile); // write the packets to the output file

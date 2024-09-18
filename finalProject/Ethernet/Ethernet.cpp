@@ -14,6 +14,19 @@ Ethernet::Ethernet(std::string configFilePath): configFilePath(configFilePath) {
     parseConfigFile(); // Parse the configuration file 
 }
 
+/*
+@prief: function to generate Ethernet packets
+*/
+void Ethernet::generate() {
+#ifdef MILESTONE_1
+    generateRandom();
+#endif
+#ifdef MILESTONE_2
+    // Add your code here
+#endif
+
+}
+
 
 /**************************************************** calculations functions *********************************************************************/
 /*
@@ -110,7 +123,7 @@ void Ethernet::calculations() {
 /*
 @prief: function to generate the packets in fixed mode and write them to the output file
 */
-void Ethernet::generateFixed() {
+void Ethernet::generateRandom() {
     calculations();
     // Open the file once before the loop with truncation to clear it
     std::ofstream outputFile(outputFilePath, std::ios::out | std::ios::trunc);
@@ -150,7 +163,7 @@ void Ethernet::writeDummyPacketsToFile(std::ofstream& outputFile) {
 
     for (uint32_t i = 0; i < BurstSize; ++i)
     {
-        std::vector<uint8_t> packet = generatePacket(payloadSize, PacketType::DummyPacket);
+        std::vector<uint8_t> packet = generatePacket(payloadSize, PacketType::RandomPacket);
         writeToFile(packet, outputFile);
         if (i != BurstSize - 1) {
             std::vector<uint8_t> IFG = generateIFG();
@@ -272,11 +285,29 @@ void Ethernet::parseConfigFile()
             SourceAddress = std::stoull(addressStr, nullptr, 0); // Convert from hex
         } else if (line.find("Eth.MaxPacketSize") == 0) {
             MaxPacketSize = std::stoul(line.substr(line.find('=') + 1));
-        } else if (line.find("Eth.BurstSize") == 0) {
+        } 
+        #ifdef MILESTONE_1
+        else if (line.find("Eth.BurstSize") == 0) {
             BurstSize = std::stoul(line.substr(line.find('=') + 1));
         } else if (line.find("Eth.BurstPeriodicity_us") == 0) {
             BurstPeriodicity_us = std::stoul(line.substr(line.find('=') + 1));
         }
+        #endif
+
+        #ifdef MILESTONE_2
+        // ORAN Configuration Parsing (for Milestone 2)
+        else if (line.find("Oran.SCS") == 0) {
+            Oran_SCS = std::stoul(line.substr(line.find('=') + 1));
+        } else if (line.find("Oran.MaxNrb") == 0) {
+            Oran_MaxNrb = std::stoul(line.substr(line.find('=') + 1));
+        } else if (line.find("Oran.NrbPerPacket") == 0) {
+            Oran_NrbPerPacket = std::stoul(line.substr(line.find('=') + 1));
+        } else if (line.find("Oran.PayloadType") == 0) {
+            Oran_PayloadType = line.substr(line.find('=') + 1);
+        } else if (line.find("Oran.Payload") == 0) {
+            Oran_Payload = line.substr(line.find('=') + 1);
+        }
+        #endif
     }
 
     configFile.close();
@@ -308,13 +339,13 @@ std::vector<uint8_t> Ethernet::generatePacket(uint32_t payloadSize, PacketType P
     // Check the packet size
     checkPacketSize(payloadSize);
     // Add Payload (variable size)
-    if (PacketType == PacketType::DummyPacket)
+    if (PacketType == PacketType::RandomPacket)
     {
         addDummyPayload(packet, payloadSize, dummyData);
     }
     else if (PacketType == PacketType::RandomPacket)
     {
-        // Add random payload
+        // Add fixed payload
     }
     // Apply CRC and append it to the packet (4 bytes)
     crc.applyCRC(packet);
