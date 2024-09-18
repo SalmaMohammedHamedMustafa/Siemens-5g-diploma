@@ -6,57 +6,111 @@
 #include <iomanip>
 #include <vector>
 
+/*
+@prief: Constructor
+@param: configFilePath: path to the configuration file
+*/
 Ethernet::Ethernet(std::string configFilePath): configFilePath(configFilePath) {
-    parseConfigFile();
-    calculateBytesPerMicrosecond();
+    parseConfigFile(); // Parse the configuration file 
 }
 
+
+/**************************************************** calculations functions *********************************************************************/
+/*
+@prief: function to calculate the number of bytes transmitted per microsecond 
+*/
 void Ethernet::calculateBytesPerMicrosecond() {
-    // Calculate the number of bytes transmitted per microsecond
     bytesPerMicrosecond = (static_cast<double>(LineRate) * 1e9) / bitsInByte / 1e6;
 }
 
+/*
+@prief: function to calculate the time to transmit one packet
+*/
 void Ethernet::calcPacketTransmissionTime() {
-    // Calculate the transmission time of one packet in microseconds using bytesPerMicrosecond
     packetTransmissionTime_us = MaxPacketSize / bytesPerMicrosecond;
 }
 
+/*
+@prief: function to calculate the transmission time of in one burst
+*/
 void Ethernet::calcBurstTransmissionTime() {
     double totalIFGTime_us = (BurstSize - 1) * (MinNumOfIFGsPerPacket / bytesPerMicrosecond); // 12 bytes IFG after each packet except the last
     burstTransmissionTime_us = (BurstSize * packetTransmissionTime_us) + totalIFGTime_us;
 }
 
+/*
+@prief: function to calculate the payload size
+*/
 void Ethernet::calcpayloadSize() {
     payloadSize = MaxPacketSize - (PreambleNumBytes + DestAddressNumBytes + SourceAddressNumBytes + EtherTypeNumBytes + CRCNumBytes);
 }
-void Ethernet::calcIFGBytesAtEndOfBurst() {
-    // Calculate the burst IFG time in microseconds
-    int burstIFGtime = BurstPeriodicity_us - burstTransmissionTime_us;
 
-    // Calculate the number of IFG bytes at the end of the burst
+/*
+@prief: function to calculate the number of IFG bytes at the end of the burst
+*/
+void Ethernet::calcIFGBytesAtEndOfBurst() {
+    int burstIFGtime = BurstPeriodicity_us - burstTransmissionTime_us; // Calculate the burst IFG time in microseconds
     IFGBytesAtEndOfBurst = burstIFGtime * bytesPerMicrosecond;
 }
+
+/*
+@prief: function to calculate the number of bursts in one frame
+*/
 void Ethernet::calcnumberOfBurtsPerFrame() {
-    // Calculate the number of bursts in one frame
     numberOfBurtsPerFrame = static_cast<uint32_t>(CaptureSizeMs * 1000.0 / BurstPeriodicity_us);
 }
+
+/*
+@prief: function to calculate the total number of packets per frame
+*/
 void Ethernet::calcPacketsPerFrame() {
-    // Calculate the total number of packets per frame
     totalPacketsPerFrame =numberOfBurtsPerFrame*  BurstSize;
 }
 
+/*
+@prief: function to calculate the number of packets in capture time
+*/
 void Ethernet::calcCaptureSizePacket() {
     CaptureSizePacket = ((static_cast<uint64_t>(CaptureSizeMs) * 1000) / BurstPeriodicity_us) * BurstSize;
 }
 
+/*
+@prief: function to calculate the total number of bytes transmitted
+*/
 void Ethernet::calcTotalNumOfBytes() {
-    // Calculate the total number of bytes transmitted in one frame
     uint64_t NumOfBytesInBurst = MaxPacketSize * BurstSize + MinNumOfIFGsPerPacket * (BurstSize - 1) + IFGBytesAtEndOfBurst;
     totalNumOfBytes = NumOfBytesInBurst * numberOfBurtsPerFrame;
 }
 
-void Ethernet::generateFixed() {
+/*
+@prief: function to calculate the maximum payload size
+*/
+void Ethernet::calcMaxPayloadSize() {
+    MaxPayloadSize = MaxPacketSize - (PreambleNumBytes + DestAddressNumBytes + SourceAddressNumBytes + EtherTypeNumBytes + CRCNumBytes);
+}
 
+/*
+@prief: function to do all the calculations and print the results
+*/
+void Ethernet::calculations() {
+    calculateBytesPerMicrosecond();
+    calcCaptureSizePacket();
+    calcPacketTransmissionTime();
+    calcBurstTransmissionTime();
+    calcIFGBytesAtEndOfBurst();
+    calcnumberOfBurtsPerFrame();
+    calcPacketsPerFrame();
+    calcpayloadSize();
+    calcTotalNumOfBytes();
+    print();
+}
+/*****************************************************************************************************************************************/
+
+/***************************************************** Fixed mode funcions ****************************************************************/
+/*
+@prief: function to generate the packets in fixed mode and write them to the output file
+*/
+void Ethernet::generateFixed() {
     calculations();
     // Open the file once before the loop with truncation to clear it
     std::ofstream outputFile(outputFilePath, std::ios::out | std::ios::trunc);
@@ -76,24 +130,72 @@ void Ethernet::generateFixed() {
     outputFile.close();
 }
 
-void Ethernet::calculations() {
-    calcCaptureSizePacket();
-    calcPacketTransmissionTime();
-    calcBurstTransmissionTime();
-    calcIFGBytesAtEndOfBurst();
-    calcnumberOfBurtsPerFrame();
-    calcPacketsPerFrame();
-    calcpayloadSize();
-    calcTotalNumOfBytes();
-    print();
-}
 
+/*
+@prief: function to generate a burst of packets used in fixed mode
+@param: outputFile: the output file stream
+*/
 void Ethernet::generateBurst(std::ofstream& outputFile) {
-    writePacketsToFile(outputFile);
+    writeDummyPacketsToFile(outputFile);
     std::vector<uint8_t> IFGBytesAtEndOfBurstVector(IFGBytesAtEndOfBurst, IFGByte);
     writeToFile(IFGBytesAtEndOfBurstVector, outputFile);
 }
 
+
+/*
+@prief: function to write the dummy packets to the output file
+@param: outputFile: the output file stream
+*/
+void Ethernet::writeDummyPacketsToFile(std::ofstream& outputFile) {
+
+    for (uint32_t i = 0; i < BurstSize; ++i)
+    {
+        std::vector<uint8_t> packet = generatePacket(payloadSize, PacketType::DummyPacket);
+        writeToFile(packet, outputFile);
+        if (i != BurstSize - 1) {
+            std::vector<uint8_t> IFG = generateIFG();
+            writeToFile(IFG, outputFile);
+        }
+    }
+
+}
+
+
+/*****************************************************************************************************************************************/
+
+/************************************************** general functions **************************************************************/
+/*
+@prief: function to generate the IFG bytes and return them as a vector
+*/
+std::vector<uint8_t> Ethernet::generateIFG() {
+    std::vector<uint8_t> IFG;
+    for (int i = 0; i < MinNumOfIFGsPerPacket; ++i) {
+        IFG.push_back(IFGByte);
+    }
+    return IFG;
+}
+
+/*
+@prief: function to write a vector of bytes to the output file
+@param: bytes: the vector of bytes to be written
+@param: outputFile: the output file stream
+*/
+void Ethernet::writeToFile(const std::vector<uint8_t>& bytes, std::ofstream& outputFile) {
+    // Dump packet data in 4-byte aligned format
+    for (size_t j = 0; j < bytes.size(); ++j) {
+        if (j % 4 == 0) {
+            outputFile << "\n";
+        }
+        outputFile << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bytes[j]) << " ";
+    }
+    outputFile << std::dec;
+
+}
+
+/*
+@prief: function to handle the 4 byte alignment and add the IFG padding if not aligned
+@param: outputFile: the output file stream
+*/
 void Ethernet::hande4ByteAlignment(std::ofstream& outputFile) {
     if (totalNumOfBytes % 4 != 0) {
         // Calculate the number of bytes needed for alignment
@@ -108,41 +210,9 @@ void Ethernet::hande4ByteAlignment(std::ofstream& outputFile) {
     }
 }
 
-void Ethernet::writePacketsToFile(std::ofstream& outputFile) {
-
-    for (uint32_t i = 0; i < BurstSize; ++i)
-    {
-        std::vector<uint8_t> packet = generatePacket(payloadSize);
-        writeToFile(packet, outputFile);
-        if (i != BurstSize - 1) {
-            std::vector<uint8_t> IFG = generateIFG();
-            writeToFile(IFG, outputFile);
-        }
-    }
-
-}
-std::vector<uint8_t> Ethernet::generateIFG() {
-    std::vector<uint8_t> IFG;
-    for (int i = 0; i < MinNumOfIFGsPerPacket; ++i) {
-        IFG.push_back(IFGByte);
-    }
-    return IFG;
-}
-
-
-void Ethernet::writeToFile(const std::vector<uint8_t>& packet, std::ofstream& outputFile) {
-    // Dump packet data in 4-byte aligned format
-    for (size_t j = 0; j < packet.size(); ++j) {
-        if (j % 4 == 0) {
-            outputFile << "\n";
-        }
-        outputFile << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(packet[j]) << " ";
-    }
-    outputFile << std::dec;
-
-}
-
-
+/*
+@prief: function to print the configuration parameters for debugging
+*/
 void Ethernet::print() const 
 {
     std::cout << "LineRate: " << LineRate << " GB\n";
@@ -164,6 +234,9 @@ void Ethernet::print() const
     std::cout << "TotalNumOfBytes: " << totalNumOfBytes << " bytes\n";
 }
 
+/*
+@prief: function to parse the configuration file
+*/
 void Ethernet::parseConfigFile()
 {
     // Open the configuration file
@@ -208,46 +281,80 @@ void Ethernet::parseConfigFile()
 
     configFile.close();
 }
+/*****************************************************************************************************************************************/
 
 
 
 
 
-
-std::vector<uint8_t> Ethernet::generatePacket(uint32_t payloadSize) {
+/************************************************** packet generation functions **************************************************************/
+/*
+@prief: function to generate a packet with a given payload size
+@param: payloadSize: the size of the payload in bytes
+@param: PacketType: the type of the packet (Dummy or Random)
+@return: the generated packet as a vector of bytes
+*/
+std::vector<uint8_t> Ethernet::generatePacket(uint32_t payloadSize, PacketType PacketType) {
+    // Create a vector to store the packet
     std::vector<uint8_t> packet;
-
     // Add Preamble and SFD (8 bytes)
-    for (int i = 7; i >= 0; --i) {
+    addPreambleandSFD(packet);
+    // Add Destination Address (6 bytes)
+    addDestAddress(packet);
+    // Add Source Address (6 bytes)
+    addSourceAddress(packet);
+    // Add EtherType (2 bytes)
+    addEtherType(packet);
+    // Check the packet size
+    checkPacketSize(payloadSize);
+    // Add Payload (variable size)
+    if (PacketType == PacketType::DummyPacket)
+    {
+        addDummyPayload(packet, payloadSize, dummyData);
+    }
+    else if (PacketType == PacketType::RandomPacket)
+    {
+        // Add random payload
+    }
+    // Apply CRC and append it to the packet (4 bytes)
+    crc.applyCRC(packet);
+    return packet;
+}
+
+void Ethernet::addPreambleandSFD(std::vector<uint8_t>& packet) {
+    for (int i = PreambleNumBytes - 1; i >= 0; --i) {
         packet.push_back((PreambleandSFD >> (i * 8)) & 0xFF);
     }
+}
 
-    // Add Destination MAC Address (6 bytes)
-    for (int i = 5; i >= 0; --i) {
+void Ethernet::addDestAddress(std::vector<uint8_t>& packet) {
+    for (int i = DestAddressNumBytes - 1; i >= 0; --i) {
         packet.push_back((DestAddress >> (i * 8)) & 0xFF);
     }
+}
 
-    // Add Source MAC Address (6 bytes)
-    for (int i = 5; i >= 0; --i) {
+void Ethernet::addSourceAddress(std::vector<uint8_t>& packet) {
+    for (int i = SourceAddressNumBytes - 1; i >= 0; --i) {
         packet.push_back((SourceAddress >> (i * 8)) & 0xFF);
     }
+}
 
-    // Add Type/Length (2 bytes, assuming EtherType for simplicity)
+void Ethernet::addEtherType(std::vector<uint8_t>& packet) {
     uint16_t etherType = 0x0800; // Example: IPv4 EtherType (0x0800)
     packet.push_back((etherType >> 8) & 0xFF);  // High byte
     packet.push_back(etherType & 0xFF);         // Low byte
-
-
-    if (payloadSize < 46) payloadSize = 46;    // Minimum payload size is 46 bytes
-    if (payloadSize > 1500) payloadSize = 1500; // Maximum Ethernet payload size is 1500 bytes
-
-    for (uint32_t i = 0; i < payloadSize; ++i) {
-        packet.push_back(0x00); // Example payload data (can be replaced with actual data)
-    }
-
-    // Apply CRC and append it to the packet (4 bytes)
-    crc.applyCRC(packet);
-
-
-    return packet;
 }
+
+void Ethernet::checkPacketSize(uint32_t& payloadSize) {
+    if (payloadSize < MinPayloadSize) payloadSize = MinPayloadSize;    // Minimum payload size is 46 bytes
+    if (payloadSize > MaxPayloadSize) payloadSize = MaxPayloadSize; // Maximum Ethernet payload size is 1500 bytes
+}
+
+
+
+void Ethernet::addDummyPayload(std::vector<uint8_t>& packet, uint32_t payloadSize, uint8_t dummyData) {
+    for (uint32_t i = 0; i < payloadSize; ++i) {
+        packet.push_back(dummyData);
+    }
+}
+/*****************************************************************************************************************************************/
