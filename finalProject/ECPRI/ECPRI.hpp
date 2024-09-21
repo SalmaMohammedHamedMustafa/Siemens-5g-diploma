@@ -31,7 +31,7 @@ class ECPRI {
     uint16_t NrbPerPacket; //Number of resource blocks per packet
     uint16_t MaxECPRIPacketSize; //Maximum ECPRI packet size
     uint16_t numOfFrames; //Number of frames
-    uint16_t MaxORANPacketSize; 
+    uint16_t MaxORANPacketSize; //Maximum ORAN packet size
     uint16_t payload; //Payload size
     uint16_t seqId; //Sequence ID
 
