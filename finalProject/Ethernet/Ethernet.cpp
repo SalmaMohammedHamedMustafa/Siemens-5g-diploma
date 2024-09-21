@@ -1,4 +1,5 @@
 #include "Ethernet.hpp"
+#include "../ECPRI/ECPRI.hpp"
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -12,6 +13,7 @@
 */
 Ethernet::Ethernet(std::string configFilePath): configFilePath(configFilePath) {
     parseConfigFile(); // Parse the configuration file 
+
 }
 
 /*
@@ -37,6 +39,14 @@ void Ethernet::calculateBytesPerMicrosecond() {
 }
 
 /*
+@prief: function to calculate the maximum payload size
+*/
+void Ethernet::calcMaxPayloadSize() {
+    MaxPayloadSize = MaxPacketSize - (PreambleNumBytes + DestAddressNumBytes + SourceAddressNumBytes + EtherTypeNumBytes + CRCNumBytes);
+}
+
+#ifdef MILESTONE_1
+/*
 @prief: function to calculate the time to transmit one packet
 */
 void Ethernet::calcPacketTransmissionTime() {
@@ -55,7 +65,7 @@ void Ethernet::calcBurstTransmissionTime() {
 @prief: function to calculate the payload size
 */
 void Ethernet::calcpayloadSize() {
-    payloadSize = MaxPacketSize - (PreambleNumBytes + DestAddressNumBytes + SourceAddressNumBytes + EtherTypeNumBytes + CRCNumBytes);
+    payloadSize = MaxPayloadSize;
 }
 
 /*
@@ -94,32 +104,45 @@ void Ethernet::calcTotalNumOfBytes() {
     uint64_t NumOfBytesInBurst = MaxPacketSize * BurstSize + MinNumOfIFGsPerPacket * (BurstSize - 1) + IFGBytesAtEndOfBurst;
     totalNumOfBytes = NumOfBytesInBurst * numberOfBurtsPerFrame;
 }
+#endif
 
+
+#ifdef MILESTONE_2
 /*
-@prief: function to calculate the maximum payload size
+@prief: function to calculate the number of frames
 */
-void Ethernet::calcMaxPayloadSize() {
-    MaxPayloadSize = MaxPacketSize - (PreambleNumBytes + DestAddressNumBytes + SourceAddressNumBytes + EtherTypeNumBytes + CRCNumBytes);
+void Ethernet::calcNumOfFrames() {
+    numOfFrames = CaptureSizeMs / frameTime;
 }
+#endif
+
 
 /*
 @prief: function to do all the calculations and print the results
 */
 void Ethernet::calculations() {
     calculateBytesPerMicrosecond();
+    calcMaxPayloadSize();
+#ifdef MILESTONE_1
+    calcMaxPayloadSize();
     calcCaptureSizePacket();
     calcPacketTransmissionTime();
     calcBurstTransmissionTime();
     calcIFGBytesAtEndOfBurst();
     calcnumberOfBurtsPerFrame();
     calcPacketsPerFrame();
-    calcpayloadSize();
     calcTotalNumOfBytes();
+#endif
+#ifdef MILESTONE_2
+    calcNumOfFrames();
+#endif 
+
     print();
 }
 /*****************************************************************************************************************************************/
 
 /***************************************************** Fixed mode funcions ****************************************************************/
+#ifdef MILESTONE_1
 /*
 @prief: function to generate the packets in fixed mode and write them to the output file
 */
@@ -175,6 +198,7 @@ void Ethernet::writeDummyPacketsToFile(std::ofstream& outputFile) {
 
 
 /*****************************************************************************************************************************************/
+#endif
 
 /************************************************** general functions **************************************************************/
 /*
@@ -228,6 +252,8 @@ void Ethernet::hande4ByteAlignment(std::ofstream& outputFile) {
 */
 void Ethernet::print() const 
 {
+    std::cout<<"\n";
+    std::cout <<"******************************************************************************************\n";
     std::cout << "LineRate: " << LineRate << " GB\n";
     std::cout << "CaptureSizeMs: " << CaptureSizeMs << " ms\n";
     std::cout << "CaptureSizePacket: " << CaptureSizePacket << " Packet\n";
@@ -237,6 +263,7 @@ void Ethernet::print() const
     std::cout << "DestAddress: 0x" << std::hex << DestAddress << std::dec <<"\n";
     std::cout << "SourceAddress: 0x" << std::hex << SourceAddress << std::dec << "\n";
     std::cout << "MaxPacketSize: " << MaxPacketSize << " bytes" << "\n";
+    #ifdef MILESTONE_1
     std::cout << "BurstSize: " << BurstSize <<"\n";
     std::cout << "BurstPeriodicity: " << BurstPeriodicity_us << " us\n";
     std::cout << "PacketTransmissionTime: " << packetTransmissionTime_us << " us\n";
@@ -245,6 +272,8 @@ void Ethernet::print() const
     std::cout << "IFGBytesAtEndOfBurst: " << IFGBytesAtEndOfBurst << " bytes\n";
     std::cout << "number of Burts Per Frame: " << numberOfBurtsPerFrame << "\n";
     std::cout << "TotalNumOfBytes: " << totalNumOfBytes << " bytes\n";
+    #endif
+    std::cout << "frameTime: " << frameTime << " ms\n";
 }
 
 /*
@@ -387,5 +416,10 @@ void Ethernet::addDummyPayload(std::vector<uint8_t>& packet, uint32_t payloadSiz
     for (uint32_t i = 0; i < payloadSize; ++i) {
         packet.push_back(dummyData);
     }
+}
+
+void Ethernet::addFixedPayload(std::vector<uint8_t>& packet, uint32_t payloadSize, std::string payload) {
+    ECPRI ecpri(Oran_SCS, Oran_MaxNrb, Oran_NrbPerPacket, MaxPayloadSize, numOfFrames);
+    
 }
 /*****************************************************************************************************************************************/
