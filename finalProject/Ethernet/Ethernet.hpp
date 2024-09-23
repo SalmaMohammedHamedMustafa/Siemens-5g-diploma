@@ -18,7 +18,7 @@ class Ethernet
         @prief: Constructor
         @param: configFilePath: path to the configuration file
         */
-        Ethernet(std::string configFilePath);
+        Ethernet();
 
         /*
         @prief: function to generate Ethernet packets
@@ -48,7 +48,7 @@ class Ethernet
             FixedPacket = 1
         }; // Enum to differentiate between the packet types
 
-        std::string configFilePath; // path to the configuration file
+        
         std::string outputFilePath="../output.txt"; // path to the output file
         uint32_t LineRate; // in GB
         uint32_t CaptureSizeMs; // in ms
@@ -63,6 +63,7 @@ class Ethernet
 
         #ifdef MILESTONE_1
         // Milestone 1 configuration parameters
+        std::string configFilePath = "../first_milestone.txt"; // path to the configuration file
         uint32_t payloadSize;// payload size in bytes
         uint32_t BurstSize; // Number of ethernet packets in one burst
         uint32_t BurstPeriodicity_us; // The periodicity of the burst in microseconds
@@ -75,6 +76,7 @@ class Ethernet
 
         #ifdef MILESTONE_2
         /* ORAN configuration parameters */
+        std::string configFilePath = "../second_milestone.txt"; // path to the configuration file
         uint32_t Oran_SCS; // Subcarrier Spacing
         uint32_t Oran_MaxNrb; // Maximum number of resource blocks
         uint32_t Oran_NrbPerPacket; // Number of resource blocks per packet

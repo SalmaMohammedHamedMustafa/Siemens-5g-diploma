@@ -11,7 +11,7 @@ class ECPRI {
         * @brief Constructor
         * @param SCS: Subcarrier spacing
         */
-        ECPRI(uint32_t SCS, uint16_t MaxNrb, uint16_t NrbPerPacket, uint32_t MaxECPRIPacketSize, uint16_t numOfFrames);
+        ECPRI(uint32_t SCS, uint16_t MaxNrb, uint16_t NrbPerPacket, uint32_t MaxECPRIPacketSize, uint32_t CaptureTime);
         /*
         * @brief Create an ECPRI packet
         * @return ECPRI packet
@@ -30,7 +30,7 @@ class ECPRI {
     uint16_t MaxNrb; //Maximum number of resource blocks in the carrier
     uint16_t NrbPerPacket; //Number of resource blocks per packet
     uint16_t MaxECPRIPacketSize; //Maximum ECPRI packet size
-    uint16_t numOfFrames; //Number of frames
+    uint32_t CaptureTime; //Capture timecode 
     uint16_t MaxORANPacketSize; //Maximum ORAN packet size
     uint16_t payload; //Payload size
     uint16_t seqId; //Sequence ID

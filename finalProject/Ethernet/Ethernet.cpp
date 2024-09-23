@@ -11,7 +11,7 @@
 @prief: Constructor
 @param: configFilePath: path to the configuration file
 */
-Ethernet::Ethernet(std::string configFilePath): configFilePath(configFilePath) {
+Ethernet::Ethernet(){
     parseConfigFile(); // Parse the configuration file 
 
 }
@@ -419,7 +419,7 @@ void Ethernet::addDummyPayload(std::vector<uint8_t>& packet, uint32_t payloadSiz
 }
 
 void Ethernet::addFixedPayload(std::vector<uint8_t>& packet, uint32_t payloadSize, std::string payload) {
-    ECPRI ecpri(Oran_SCS, Oran_MaxNrb, Oran_NrbPerPacket, MaxPayloadSize, numOfFrames);
+    ECPRI ecpri(Oran_SCS, Oran_MaxNrb, Oran_NrbPerPacket, MaxPayloadSize, CaptureSizeMs);
     
 }
 /*****************************************************************************************************************************************/

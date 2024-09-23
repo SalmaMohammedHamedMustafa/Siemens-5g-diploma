@@ -8,13 +8,13 @@
 * it initializes the payload size based on the MaxECPRIPacketSize
 * @param SCS: Subcarrier spacing
 */   
-ECPRI::ECPRI(uint32_t SCS, uint16_t MaxNrb, uint16_t NrbPerPacket, uint32_t MaxECPRIPacketSize, uint16_t numOfFrames): 
-SCS(SCS), MaxNrb(MaxNrb), NrbPerPacket(NrbPerPacket), MaxECPRIPacketSize(MaxECPRIPacketSize), numOfFrames(numOfFrames)
+ECPRI::ECPRI(uint32_t SCS, uint16_t MaxNrb, uint16_t NrbPerPacket, uint32_t MaxECPRIPacketSize, uint32_t CaptureTime): 
+SCS(SCS), MaxNrb(MaxNrb), NrbPerPacket(NrbPerPacket), MaxECPRIPacketSize(MaxECPRIPacketSize), CaptureTime(CaptureTime)
 
 
 {
     MaxORANPacketSize = MaxECPRIPacketSize - ECPRIPacketHeaderBytes;
-    ORAN oran(SCS, MaxNrb, NrbPerPacket, MaxORANPacketSize, numOfFrames);
+    ORAN oran;
     std::vector<uint8_t> oranPacket = oran.createORANPacket();
 
 }
