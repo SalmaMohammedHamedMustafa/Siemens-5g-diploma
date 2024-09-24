@@ -13,11 +13,15 @@ class ORAN {
         * @param SCS: Subcarrier spacing
         */
         ORAN(uint64_t MaxPacketSize);
+        ORAN();
         /*
         * @brief Create an ORAN packet
         * @return ORAN packet
         */
         std::vector<uint8_t> createORANPacket();
+
+        /*getters*/
+        uint32_t getTotalNumOfPackets() const; //get the total number of packets 
 
 
     private:
@@ -75,6 +79,9 @@ class ORAN {
     uint8_t slotId = 0; // Slot ID
     uint8_t symbolId = 0; // Symbol ID
 
+    std::streampos lastFilePosition = 0;  // To store the file position
+    size_t bytesPushedTotal = 0;          // To store the total number of bytes pushed across calls
+
 
     /*functions*/
     /*genral functions*/
@@ -102,6 +109,8 @@ class ORAN {
     void updateSubframeId(); //update the subframe ID
     void updateSlotId(); //update the slot ID
     void updateSymbolId(); //update the symbol ID
+
+
 
     
 

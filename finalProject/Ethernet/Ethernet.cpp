@@ -27,7 +27,7 @@ void Ethernet::generate() {
     generateRandom();
 #endif
 #ifdef MILESTONE_2
-    // Add your code here
+    generateFixed();
 #endif
 
 }
@@ -47,6 +47,12 @@ void Ethernet::calculateBytesPerMicrosecond() {
 void Ethernet::calcMaxPayloadSize() {
     MaxPayloadSize = MaxPacketSize - (PreambleNumBytes + DestAddressNumBytes + SourceAddressNumBytes + EtherTypeNumBytes + CRCNumBytes);
 }
+/*
+@prief: function to calculate the payload size
+*/
+void Ethernet::calcpayloadSize() {
+    payloadSize = MaxPayloadSize;
+}
 
 #ifdef MILESTONE_1
 /*
@@ -64,12 +70,7 @@ void Ethernet::calcBurstTransmissionTime() {
     burstTransmissionTime_us = (BurstSize * packetTransmissionTime_us) + totalIFGTime_us;
 }
 
-/*
-@prief: function to calculate the payload size
-*/
-void Ethernet::calcpayloadSize() {
-    payloadSize = MaxPayloadSize;
-}
+
 
 /*
 @prief: function to calculate the number of IFG bytes at the end of the burst
@@ -126,8 +127,8 @@ void Ethernet::calcNumOfFrames() {
 void Ethernet::calculations() {
     calculateBytesPerMicrosecond();
     calcMaxPayloadSize();
+    calcpayloadSize();
 #ifdef MILESTONE_1
-    calcMaxPayloadSize();
     calcCaptureSizePacket();
     calcPacketTransmissionTime();
     calcBurstTransmissionTime();
@@ -144,7 +145,7 @@ void Ethernet::calculations() {
 }
 /*****************************************************************************************************************************************/
 
-/***************************************************** Fixed mode funcions ****************************************************************/
+/***************************************************** random mode funcions ****************************************************************/
 #ifdef MILESTONE_1
 /*
 @prief: function to generate the packets in fixed mode and write them to the output file
@@ -189,7 +190,7 @@ void Ethernet::writeDummyPacketsToFile(std::ofstream& outputFile) {
 
     for (uint32_t i = 0; i < BurstSize; ++i)
     {
-        std::vector<uint8_t> packet = generatePacket(payloadSize, PacketType::RandomPacket);
+        std::vector<uint8_t> packet = generatePacketRandom();
         writeToFile(packet, outputFile);
         if (i != BurstSize - 1) {
             std::vector<uint8_t> IFG = generateIFG();
@@ -201,6 +202,46 @@ void Ethernet::writeDummyPacketsToFile(std::ofstream& outputFile) {
 
 
 /*****************************************************************************************************************************************/
+#endif
+
+
+/***************************************************** fixed mode funcions ****************************************************************/
+#ifdef MILESTONE_2
+void Ethernet::generateFixed() {
+    calculations();
+    // Open the file once before the loop with truncation to clear it
+    std::ofstream outputFile(outputFilePath, std::ios::out | std::ios::trunc);
+
+    
+    if (!outputFile.is_open()) {
+        std::cerr << "Error opening file for writing: output.txt" << std::endl;
+        return;
+    }
+
+    generateFixedPackets(outputFile);   
+
+
+    //hande4ByteAlignment(outputFile);
+
+    // Close the file after all packets are written
+    outputFile.close();
+}
+
+void Ethernet::generateFixedPackets(std::ofstream& outputFile) {
+    ECPRI ecpri(MaxPayloadSize);
+    totalNumOfPackets= ecpri.getTotalNumOfPackets();
+    std::cout << "Total number of packets: " << totalNumOfPackets << std::endl;
+    for (uint32_t i = 0; i < totalNumOfPackets; ++i) {
+        //std::cout<<"Packet number: "<<i<<std::endl;
+        std::vector<uint8_t> packet = generatePacketFixed();
+        writeToFile(packet, outputFile);
+        if (i != totalNumOfPackets - 1) {
+            std::vector<uint8_t> IFG = generateIFG();
+            writeToFile(IFG, outputFile);
+        }
+    }
+}
+
 #endif
 
 /************************************************** general functions **************************************************************/
@@ -357,7 +398,7 @@ void Ethernet::parseConfigFile()
 @param: PacketType: the type of the packet (Dummy or Random)
 @return: the generated packet as a vector of bytes
 */
-std::vector<uint8_t> Ethernet::generatePacket(uint32_t payloadSize, PacketType PacketType) {
+std::vector<uint8_t> Ethernet::generatePacketRandom( ) {
     // Create a vector to store the packet
     std::vector<uint8_t> packet;
     // Add Preamble and SFD (8 bytes)
@@ -371,14 +412,27 @@ std::vector<uint8_t> Ethernet::generatePacket(uint32_t payloadSize, PacketType P
     // Check the packet size
     checkPacketSize(payloadSize);
     // Add Payload (variable size)
-    if (PacketType == PacketType::RandomPacket)
-    {
-        addDummyPayload(packet, payloadSize, dummyData);
-    }
-    else if (PacketType == PacketType::RandomPacket)
-    {
-        // Add fixed payload
-    }
+    addDummyPayload(packet, payloadSize, dummyData);
+    // Apply CRC and append it to the packet (4 bytes)
+    crc.applyCRC(packet);
+    return packet;
+}
+
+std::vector<uint8_t> Ethernet::generatePacketFixed() {
+    // Create a vector to store the packet
+    std::vector<uint8_t> packet;
+    // Add Preamble and SFD (8 bytes)
+    addPreambleandSFD(packet);
+    // Add Destination Address (6 bytes)
+    addDestAddress(packet);
+    // Add Source Address (6 bytes)
+    addSourceAddress(packet);
+    // Add EtherType (2 bytes)
+    addEtherType(packet);
+    // Check the packet size
+    checkPacketSize(payloadSize);
+    // Add Payload (variable size)
+    addFixedPayload(packet);
     // Apply CRC and append it to the packet (4 bytes)
     crc.applyCRC(packet);
     return packet;
@@ -422,8 +476,9 @@ void Ethernet::addDummyPayload(std::vector<uint8_t>& packet, uint32_t payloadSiz
 }
 
 #ifdef MILESTONE_2
-void Ethernet::addFixedPayload(std::vector<uint8_t>& packet, uint32_t payloadSize, std::string payload) {
-    ECPRI ecpri(Oran_SCS, Oran_MaxNrb, Oran_NrbPerPacket, MaxPayloadSize, CaptureSizeMs);
+void Ethernet::addFixedPayload(std::vector<uint8_t> &packet) {
+    std::vector<uint8_t> ecpriPacket = ecpri.createECPRIPacket();
+    packet.insert(packet.end(), ecpriPacket.begin(), ecpriPacket.end());
     
 }
 #endif

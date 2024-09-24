@@ -1,14 +1,14 @@
 #ifndef ETHERNET_HPP
 #define ETHERNET_HPP
 
-#define MILESTONE_1  // Uncomment this for Milestone 1
-//#define MILESTONE_2  // Uncomment this for Milestone 2
+//#define MILESTONE_1  // Uncomment this for Milestone 1
+#define MILESTONE_2  // Uncomment this for Milestone 2
 
 #include <cstdint>
 #include <string>
 #include <vector>
 #include "../CRC/CRC.hpp"
-
+#include "../ECPRI/ECPRI.hpp"
 
 
 class Ethernet 
@@ -42,12 +42,6 @@ class Ethernet
         static constexpr uint8_t CRCNumBytes = 4;
         static constexpr uint32_t MinPacketSize = 64;
         static constexpr uint32_t MinPayloadSize = MinPacketSize - (PreambleNumBytes + DestAddressNumBytes + SourceAddressNumBytes + EtherTypeNumBytes + CRCNumBytes);
-        enum class PacketType
-        {
-            RandomPacket = 0,
-            FixedPacket = 1
-        }; // Enum to differentiate between the packet types
-
         
         std::string outputFilePath="../output.txt"; // path to the output file
         uint32_t LineRate; // in GB
@@ -60,11 +54,12 @@ class Ethernet
         uint32_t MaxPayloadSize ; // maximum payload size in bytes
         uint64_t totalNumOfBytes; // Total number of bytes transmitted
         double bytesPerMicrosecond; // Number of bytes transmitted per microsecond
+        uint32_t payloadSize;// payload size in bytes
+
 
         #ifdef MILESTONE_1
         // Milestone 1 configuration parameters
         std::string configFilePath = "../first_milestone.txt"; // path to the configuration file
-        uint32_t payloadSize;// payload size in bytes
         uint32_t BurstSize; // Number of ethernet packets in one burst
         uint32_t BurstPeriodicity_us; // The periodicity of the burst in microseconds
         uint32_t numberOfBurtsPerFrame; // Number of bursts in one frame
@@ -76,13 +71,15 @@ class Ethernet
 
         #ifdef MILESTONE_2
         /* ORAN configuration parameters */
-        std::string configFilePath = "../second_milestone.txt"; // path to the configuration file
+        std::string configFilePath = "../second_milstone.txt"; // path to the configuration file
         uint32_t Oran_SCS; // Subcarrier Spacing
         uint32_t Oran_MaxNrb; // Maximum number of resource blocks
         uint32_t Oran_NrbPerPacket; // Number of resource blocks per packet
         std::string Oran_PayloadType; // Random or fixed
         std::string Oran_Payload; // Filename of payload, if fixed
         uint32_t numOfFrames; // number of frames 
+        uint32_t totalNumOfPackets; // Total number of ORAN packets
+        ECPRI ecpri; // ECPRI instance
 
         #endif
 
@@ -114,10 +111,13 @@ class Ethernet
         void parseConfigFile(); //parse the configuration file
         void generateBurst(std::ofstream& outputFile); // generate a burst of packets
         void writeDummyPacketsToFile(std::ofstream& outputFile); // write the packets to the output file
-        std::vector<uint8_t> generatePacket(uint32_t payloadSize, PacketType PacketType); // generate a packet with a given payload size
+        std::vector<uint8_t> generatePacketRandom(); // generate a packet with a given payload size
 
         /*fixed mode functions*/
-
+        void generateFixed(); // generate the packets in Fixed mode and write them to the output file
+        void generateFixedPackets(std::ofstream& outputFile); // generate a fixed packet
+        std::vector<uint8_t> generatePacketFixed(); // generate a fixed packet with a given payload size and ORAN instance
+        void addFixedPayload(std::vector<uint8_t> &packet); // add a fixed payload to the packet
 
         /*packet parts*/
         void addPreambleandSFD(std::vector<uint8_t> &packet); // add the preamble and SFD to the packet
@@ -126,7 +126,6 @@ class Ethernet
         void addEtherType(std::vector<uint8_t> &packet); // add the EtherType to the packet
         void addDummyPayload(std::vector<uint8_t> &packet,uint32_t payloadSize, uint8_t dummyData); // generate a dummy payload
         void checkPacketSize(uint32_t &payloadSize); // check the packet size and adjust it if needed
-        void addFixedPayload(std::vector<uint8_t> &packet, uint32_t payloadSize, std::string payload); // add a fixed payload to the packet
 };
 
 #endif // ETHERNET_HPP

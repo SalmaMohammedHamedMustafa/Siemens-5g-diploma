@@ -34,9 +34,16 @@ ORAN::ORAN(uint64_t MaxPacketSize): MaxPacketSize(MaxPacketSize)
     parseConfigFile();
     findSlotsPerSubFrame();
     calculate();
-    printVariables();
+    //printVariables();
 }
 
+ORAN::ORAN()
+{
+    parseConfigFile();
+    findSlotsPerSubFrame();
+    calculate();
+    //printVariables();
+}
 /*
 * @brief function to find the number of slots per subframe
 */
@@ -64,21 +71,25 @@ std::vector<uint8_t> ORAN::createORANPacket() {
     packet.push_back(firstByte);
 
     // frameId [0:99], needs all the second byte
-    updateFrameId();
     packet.push_back(frameId);  
+    updateFrameId();
+
 
     // subframeId [0:9], needs 4 bits
     // slotId [0:7], needs 3 bits
     // Pack subframeId (4 bits) and slotId (3 bits) into one byte
     // subframeId occupies the 4 most significant bits and slotId occupies the 3 least significant bits
-    updateSlotId();
-    updateSubframeId();
+    
     uint8_t secondByte = (subframeId << 4) | slotId ;
     packet.push_back(secondByte);
+    updateSlotId();
+    updateSubframeId();
+
 
     // symbolId [0:13], can take 4 the whole byte as slotId is only 3 bits
-    updateSymbolId();
+    
     packet.push_back(symbolId);
+    updateSymbolId();
 
     // sectionId byte
     packet.push_back(sectionId);
@@ -95,7 +106,7 @@ std::vector<uint8_t> ORAN::createORANPacket() {
     // Parse the IQ data from the file
     parseIQData(packet);
 
-    printPacket(packet);
+    //printPacket(packet);
 
     return packet;
 }
@@ -362,6 +373,7 @@ void ORAN::calcPacketsPerSec()
 void ORAN::calcTotalNumOfOranPackets()
 {
     totalNumOfOranPackets = packetsPerSec * CaptureSizeMs / 1000; //capture size in Ms
+    std::cout << "Total number of ORAN packets: " << totalNumOfOranPackets << std::endl;
 }
 
 /*
@@ -407,4 +419,10 @@ void ORAN::printVariables()
     std::cout <<"Total Num Of Oran Packets: " << totalNumOfOranPackets << "\n";
     std::cout <<"Total Num Of Bytes: " << totalNumOfBytes << "\n";
 
+}
+
+/**************************************************** getters ****************************************************/
+uint32_t ORAN::getTotalNumOfPackets() const
+{
+    return totalNumOfOranPackets;
 }
