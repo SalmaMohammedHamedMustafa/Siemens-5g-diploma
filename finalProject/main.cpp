@@ -6,7 +6,7 @@ void sendFile();
 
 int main() {
     // Create an Ethernet object and generate data
-    Ethernet eth("../Ethernet/EthernetConfig.txt");
+    Ethernet eth;
     eth.generate();
     int choice;
     std::cout << "Enter 1 to send the file: ";

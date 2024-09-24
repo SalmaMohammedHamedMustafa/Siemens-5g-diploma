@@ -10,4 +10,4 @@ Oran.MaxNrb = 273 // from 0 to 255 and if 0 then MaxNRB is 273
 Oran.NrbPerPacket = 30 // from 0 to 255 and if 0 then Max NRB per packet  is 273 
 
 Oran.PayloadType = fixed // (Random or fixed).  Fixed means that the payload will be taken from a file.
-Oran.Payload = iq_file.txt //(text file name that contains formatted IQ samples), if Oran.payloadType is Random then this parameter will be ignored.
+Oran.Payload = ../iq_file.txt //(text file name that contains formatted IQ samples), if Oran.payloadType is Random then this parameter will be ignored.

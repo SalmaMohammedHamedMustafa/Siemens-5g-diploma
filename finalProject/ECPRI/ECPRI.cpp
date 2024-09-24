@@ -14,7 +14,7 @@ SCS(SCS), MaxNrb(MaxNrb), NrbPerPacket(NrbPerPacket), MaxECPRIPacketSize(MaxECPR
 
 {
     MaxORANPacketSize = MaxECPRIPacketSize - ECPRIPacketHeaderBytes;
-    ORAN oran;
+    ORAN oran(MaxORANPacketSize);
     std::vector<uint8_t> oranPacket = oran.createORANPacket();
 
 }

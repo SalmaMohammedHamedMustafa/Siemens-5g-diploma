@@ -1,8 +1,8 @@
 #ifndef ETHERNET_HPP
 #define ETHERNET_HPP
 
-//#define MILESTONE_1  // Uncomment this for Milestone 1
-#define MILESTONE_2  // Uncomment this for Milestone 2
+#define MILESTONE_1  // Uncomment this for Milestone 1
+//#define MILESTONE_2  // Uncomment this for Milestone 2
 
 #include <cstdint>
 #include <string>

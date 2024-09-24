@@ -1,11 +1,14 @@
 #include "Ethernet.hpp"
-#include "../ECPRI/ECPRI.hpp"
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <iomanip>
 #include <vector>
+
+#ifdef MILESTONE_2
+#include "../ECPRI/ECPRI.hpp"
+#endif
 
 /*
 @prief: Constructor
@@ -418,8 +421,10 @@ void Ethernet::addDummyPayload(std::vector<uint8_t>& packet, uint32_t payloadSiz
     }
 }
 
+#ifdef MILESTONE_2
 void Ethernet::addFixedPayload(std::vector<uint8_t>& packet, uint32_t payloadSize, std::string payload) {
     ECPRI ecpri(Oran_SCS, Oran_MaxNrb, Oran_NrbPerPacket, MaxPayloadSize, CaptureSizeMs);
     
 }
+#endif
 /*****************************************************************************************************************************************/
