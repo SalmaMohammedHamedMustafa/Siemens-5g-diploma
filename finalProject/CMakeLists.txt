@@ -16,8 +16,14 @@ file(GLOB CRC_SRC CRC/*.cpp)
 # Add the socket handler source files
 file(GLOB SOCKET_HANDLER_SRC socket_handler/*.cpp)
 
-# Include directories for Ethernet, CRC, and socket_handler headers
-include_directories(Ethernet CRC socket_handler)
+# Add the ECPRI source files
+file(GLOB ECPRI_SRC ECPRI/*.cpp)
+
+# Add the ORAN source files
+file(GLOB ORAN_SRC ORAN/*.cpp)
+
+# Include directories for Ethernet, CRC, socket_handler, ECPRI, and ORAN headers
+include_directories(Ethernet CRC socket_handler ECPRI ORAN)
 
 # Create an executable and include all source files
-add_executable(EthernetApp main.cpp ${ETH_SRC} ${CRC_SRC} ${SOCKET_HANDLER_SRC})
+add_executable(EthernetApp main.cpp ${ETH_SRC} ${CRC_SRC} ${SOCKET_HANDLER_SRC} ${ECPRI_SRC} ${ORAN_SRC})
