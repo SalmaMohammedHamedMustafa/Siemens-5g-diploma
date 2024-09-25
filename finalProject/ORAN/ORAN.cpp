@@ -34,7 +34,7 @@ ORAN::ORAN(uint64_t MaxPacketSize): MaxPacketSize(MaxPacketSize)
     parseConfigFile();
     findSlotsPerSubFrame();
     calculate();
-    //printVariables();
+    printVariables();
 }
 
 ORAN::ORAN()
@@ -123,40 +123,51 @@ std::vector<uint8_t> ORAN::createORANPacket() {
 * each sample is stored in 4 bytes
 * real is stored in the lower 16 bits and imag is stored in the higher 16 bits
 */
-void  ORAN::parseIQData(std::vector<uint8_t> &packet) {
-    std::ifstream infile(Oran_Payload);
-    
+void ORAN::parseIQData(std::vector<uint8_t> &packet) {
+    static std::streampos lastPosition = 0;  // Store the last position for subsequent calls
+    std::ifstream infile(Oran_Payload, std::ios::in);
 
     if (!infile) {
         std::cerr << "Error opening file!" << std::endl;
+        return;  // Exit if the file can't be opened
     }
 
     int real, imag;
     std::string line;
-    
-    // To count the number of bytes pushed into the packet
     size_t bytesPushed = 0;
-    
-    // Each IQ sample contains 4 bytes (2 for real, 2 for imaginary)
     const size_t bytesPerSample = 4;
 
-    while (std::getline(infile, line) && bytesPushed < BytesPerPayload) {
-        std::istringstream iss(line);
-        while (iss >> real >> imag && bytesPushed < BytesPerPayload) {
-            // Convert real and imaginary parts to 16-bit integers
-            int16_t real16 = convertTo16Bit(real);
-            int16_t imag16 = convertTo16Bit(imag);
+    // Move to the last read position (if set)
+    infile.seekg(lastPosition);
 
-            // Break the 16-bit real part into 2 bytes and add to the vector
-            packet.push_back(static_cast<uint8_t>(real16 & 0xFF)); // lower byte
-            packet.push_back(static_cast<uint8_t>((real16 >> 8) & 0xFF)); // higher byte
-            
-            // Break the 16-bit imaginary part into 2 bytes and add to the vector
-            packet.push_back(static_cast<uint8_t>(imag16 & 0xFF)); // lower byte
-            packet.push_back(static_cast<uint8_t>((imag16 >> 8) & 0xFF)); // higher byte
-            
-            // Update the number of bytes pushed
-            bytesPushed += bytesPerSample;
+    while (bytesPushed < BytesPerPayload) {
+        if (std::getline(infile, line)) {
+            std::istringstream iss(line);
+            while (iss >> real >> imag && bytesPushed < BytesPerPayload) {
+                int16_t real16 = convertTo16Bit(real);
+                int16_t imag16 = convertTo16Bit(imag);
+                
+                // Push the real and imaginary values into the packet
+                packet.push_back(static_cast<uint8_t>(real16 & 0xFF));  // lower byte of real
+                packet.push_back(static_cast<uint8_t>((real16 >> 8) & 0xFF));  // higher byte of real
+                packet.push_back(static_cast<uint8_t>(imag16 & 0xFF));  // lower byte of imaginary
+                packet.push_back(static_cast<uint8_t>((imag16 >> 8) & 0xFF));  // higher byte of imaginary
+                
+                // Update bytes pushed
+                bytesPushed += bytesPerSample;
+            }
+        } else {
+            // If end of file is reached, reset to beginning
+            infile.clear();  // Clear EOF flag
+            infile.seekg(0, std::ios::beg);  // Go back to the beginning of the file
+        }
+
+        // Update the last position for the next call
+        lastPosition = infile.tellg();
+
+        // Break if we've pushed enough bytes
+        if (bytesPushed >= BytesPerPayload) {
+            break;
         }
     }
 
@@ -200,9 +211,11 @@ void ORAN::printPacket(const std::vector<uint8_t>& packet) {
 
 /**************************************************** ID updae functions ****************************************************/
 void ORAN::updateFrameId() {
-    static uint8_t packetsPerFrameCounter = 0;
+    static uint64_t packetsPerFrameCounter = 0;
     packetsPerFrameCounter++;
     if (packetsPerFrameCounter% packetsPerFrame == 0) {
+        std::cout << "packetsPerFrameCounter: " << packetsPerFrameCounter << std::endl;
+        std::cout << "Frame ID: " << static_cast<int>(frameId) << std::endl;
         frameId++;
     }
     if (frameId == maxFrameId+1) {
@@ -211,9 +224,11 @@ void ORAN::updateFrameId() {
 }
 
 void ORAN::updateSubframeId() {
-    static uint8_t packetsPerSubFrameCounter = 0;
+    static uint64_t packetsPerSubFrameCounter = 0;
     packetsPerSubFrameCounter++;
     if (packetsPerSubFrameCounter % packetsPerSubFrame == 0) {
+        std::cout << "packetsPerSubFrameCounter: " << packetsPerSubFrameCounter << std::endl;
+        std::cout << "Subframe ID: " << static_cast<int>(subframeId) << std::endl;
         subframeId++;
     }
     if (subframeId == maxSubframeId+1) {
@@ -222,9 +237,11 @@ void ORAN::updateSubframeId() {
 }
 
 void ORAN::updateSlotId() {
-    static uint8_t packetsPerSlotCounter = 0;
+    static uint64_t packetsPerSlotCounter = 0;
     packetsPerSlotCounter++;
     if (packetsPerSlotCounter % packetsPerSlot == 0) {
+        std::cout << "packetsPerSlotCounter: " << packetsPerSlotCounter << std::endl;
+        std::cout << "Slot ID: " << static_cast<int>(slotId) << std::endl;
         slotId++;
     }
     if (slotId == maxSlotId+1) {
@@ -233,9 +250,11 @@ void ORAN::updateSlotId() {
 }
 
 void ORAN::updateSymbolId() {
-    static uint8_t packetsPerSymbolCounter = 0;
+    static uint64_t packetsPerSymbolCounter = 0;
     packetsPerSymbolCounter++;
     if (packetsPerSymbolCounter % packetsPerSymbol == 0) {
+        std::cout << "packetsPerSymbolCounter: " << packetsPerSymbolCounter << std::endl;
+        std::cout << "Symbol ID: " << static_cast<int>(symbolId) << std::endl;
         symbolId++;
     }
     if (symbolId == maxSymbolId+1) {

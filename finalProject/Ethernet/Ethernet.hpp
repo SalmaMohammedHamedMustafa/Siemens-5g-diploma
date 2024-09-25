@@ -102,7 +102,7 @@ class Ethernet
         void writeToFile(const std::vector<uint8_t>& bytes, std::ofstream& outputFile); // write a vector of bytes to the output file   
         std::vector<uint8_t> generateIFG(); // generate the IFG bytes
         void print() const; //print the configuration parameters for debugging
-        void hande4ByteAlignment(std::ofstream& outputFile); // handle the 4 byte alignment and add the IFG padding if not aligned
+        void hande4ByteAlignment(std::vector<uint8_t>& packet); // handle the 4 byte alignment and add the IFG padding if not aligned
 
     
 

@@ -232,8 +232,8 @@ void Ethernet::generateFixedPackets(std::ofstream& outputFile) {
     totalNumOfPackets= ecpri.getTotalNumOfPackets();
     std::cout << "Total number of packets: " << totalNumOfPackets << std::endl;
     for (uint32_t i = 0; i < totalNumOfPackets; ++i) {
-        //std::cout<<"Packet number: "<<i<<std::endl;
         std::vector<uint8_t> packet = generatePacketFixed();
+        hande4ByteAlignment(packet);
         writeToFile(packet, outputFile);
         if (i != totalNumOfPackets - 1) {
             std::vector<uint8_t> IFG = generateIFG();
@@ -277,15 +277,15 @@ void Ethernet::writeToFile(const std::vector<uint8_t>& bytes, std::ofstream& out
 @prief: function to handle the 4 byte alignment and add the IFG padding if not aligned
 @param: outputFile: the output file stream
 */
-void Ethernet::hande4ByteAlignment(std::ofstream& outputFile) {
-    if (totalNumOfBytes % 4 != 0) {
+void Ethernet::hande4ByteAlignment(std::vector<uint8_t>& packet) {
+    if (packet.size() % 4 != 0) {
         // Calculate the number of bytes needed for alignment
-        uint32_t alignmentBytes = 4 - (totalNumOfBytes % 4);
+        uint32_t alignmentBytes = 4 - (packet.size() % 4);
 
         // Add IFG padding for alignment
         if (alignmentBytes > 0) {
             std::vector<uint8_t> IFGPadding(alignmentBytes, IFGByte);
-            writeToFile(IFGPadding, outputFile);
+            packet.insert(packet.end(), IFGPadding.begin(), IFGPadding.end());
         }
         
     }
