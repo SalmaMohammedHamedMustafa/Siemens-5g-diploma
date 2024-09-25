@@ -1,0 +1,9 @@
+EthernetMax = 1500
+EthernetHeaders = 22
+EthernetCRC = 4
+eCPRIHeaders = 8
+ORANHeaders = 8
+
+//recieved = meaning 
+a5 ff = -91
+5b 00 = 91
