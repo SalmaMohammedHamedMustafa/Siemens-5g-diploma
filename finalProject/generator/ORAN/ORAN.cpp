@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iomanip>
 #include <string>
+#include <random>
 /*
 *SCS to number of slots map definition
 */
@@ -23,26 +24,13 @@ const std::map<uint32_t, uint16_t> ORAN::SCS2SlotsMap =
 
 /*
 * @brief Constructor 
-* it initializes the number of slots based on the SCS
-* as it searches for the SCS in the SCS2SlotsMap
-* if it finds it, it initializes the number of slots
-* if it doesn't find it, it prints an error message
-* @param SCS: Subcarrier spacing
 */
-ORAN::ORAN(uint64_t MaxPacketSize): MaxPacketSize(MaxPacketSize)
-{
-    parseConfigFile();
-    findSlotsPerSubFrame();
-    calculate();
-    printVariables();
-}
-
 ORAN::ORAN()
 {
     parseConfigFile();
     findSlotsPerSubFrame();
+    handleFragmentation();
     calculate();
-    //printVariables();
 }
 /*
 * @brief function to find the number of slots per subframe
@@ -103,8 +91,16 @@ std::vector<uint8_t> ORAN::createORANPacket() {
     // number of RBs used
     packet.push_back(static_cast<uint8_t>(Oran_NrbPerPacket));
 
-    // Parse the IQ data from the file
-    parseIQData(packet);
+    if (Oran_PayloadType == "Random") {
+        // Generate a random payload
+        generateRandomPayload(packet);
+    }
+    else if (Oran_PayloadType == "fixed") {
+        // Parse the IQ data from the file
+        parseIQData(packet);
+    }
+
+
 
     //printPacket(packet);
 
@@ -175,6 +171,7 @@ void ORAN::parseIQData(std::vector<uint8_t> &packet) {
 }
 
 
+
 /*
 * @brief function to convert an integer to a 16-bit integer
 * @param value: the integer to be converted
@@ -183,6 +180,25 @@ void ORAN::parseIQData(std::vector<uint8_t> &packet) {
 int16_t ORAN::convertTo16Bit(int value) {
 
     return static_cast<int16_t>(value);
+}
+
+void ORAN::generateRandomPayload(std::vector<uint8_t> &packet) {
+    for (uint16_t i = 0; i < (BytesPerPayload/2); ++i) {
+        // Create a random device to seed the random number generator
+        std::random_device rd;
+        // Use the random device to seed a random number generator
+        std::mt19937 gen(rd());
+        // Define a uniform distribution with two values: -91 and 91
+        std::uniform_int_distribution<int> dist(0, 1);
+        // Generate either 91 or -91 based on the random value (0 or 1)
+        int result = dist(gen) == 0 ? -91 : 91;
+        // Convert the result to a 16-bit integer
+        int16_t result16 = convertTo16Bit(result);
+        // Push the lower byte of the 16-bit integer
+        packet.push_back(static_cast<uint8_t>(result16 & 0xFF));
+        // Push the higher byte of the 16-bit integer
+        packet.push_back(static_cast<uint8_t>((result16 >> 8) & 0xFF));
+    }
 }
 
 
@@ -214,8 +230,6 @@ void ORAN::updateFrameId() {
     static uint64_t packetsPerFrameCounter = 0;
     packetsPerFrameCounter++;
     if (packetsPerFrameCounter% packetsPerFrame == 0) {
-        std::cout << "packetsPerFrameCounter: " << packetsPerFrameCounter << std::endl;
-        std::cout << "Frame ID: " << static_cast<int>(frameId) << std::endl;
         frameId++;
     }
     if (frameId == maxFrameId+1) {
@@ -227,8 +241,6 @@ void ORAN::updateSubframeId() {
     static uint64_t packetsPerSubFrameCounter = 0;
     packetsPerSubFrameCounter++;
     if (packetsPerSubFrameCounter % packetsPerSubFrame == 0) {
-        std::cout << "packetsPerSubFrameCounter: " << packetsPerSubFrameCounter << std::endl;
-        std::cout << "Subframe ID: " << static_cast<int>(subframeId) << std::endl;
         subframeId++;
     }
     if (subframeId == maxSubframeId+1) {
@@ -240,8 +252,6 @@ void ORAN::updateSlotId() {
     static uint64_t packetsPerSlotCounter = 0;
     packetsPerSlotCounter++;
     if (packetsPerSlotCounter % packetsPerSlot == 0) {
-        std::cout << "packetsPerSlotCounter: " << packetsPerSlotCounter << std::endl;
-        std::cout << "Slot ID: " << static_cast<int>(slotId) << std::endl;
         slotId++;
     }
     if (slotId == maxSlotId+1) {
@@ -253,8 +263,6 @@ void ORAN::updateSymbolId() {
     static uint64_t packetsPerSymbolCounter = 0;
     packetsPerSymbolCounter++;
     if (packetsPerSymbolCounter % packetsPerSymbol == 0) {
-        std::cout << "packetsPerSymbolCounter: " << packetsPerSymbolCounter << std::endl;
-        std::cout << "Symbol ID: " << static_cast<int>(symbolId) << std::endl;
         symbolId++;
     }
     if (symbolId == maxSymbolId+1) {
@@ -299,8 +307,16 @@ void ORAN::parseConfigFile()
             Oran_SCS = std::stoul(line.substr(line.find('=') + 1));
         } else if (line.find("Oran.MaxNrb") == 0) {
             Oran_MaxNrb = std::stoul(line.substr(line.find('=') + 1));
+            if (Oran_MaxNrb == 0)
+            {
+                Oran_MaxNrb = 273;
+            }
         } else if (line.find("Oran.NrbPerPacket") == 0) {
             Oran_NrbPerPacket = std::stoul(line.substr(line.find('=') + 1));
+            if (Oran_NrbPerPacket == 0)
+            {
+                Oran_NrbPerPacket = 273;
+            }
         } else if (line.find("Oran.PayloadType") == 0) {
             Oran_PayloadType = line.substr(line.find('=') + 1);
         } else if (line.find("Oran.Payload") == 0) {
@@ -392,7 +408,6 @@ void ORAN::calcPacketsPerSec()
 void ORAN::calcTotalNumOfOranPackets()
 {
     totalNumOfOranPackets = packetsPerSec * CaptureSizeMs / 1000; //capture size in Ms
-    std::cout << "Total number of ORAN packets: " << totalNumOfOranPackets << std::endl;
 }
 
 /*
@@ -412,11 +427,18 @@ void ORAN::calcTotalNumOfBytes()
 }
 
 
+void ORAN::handleFragmentation()
+{
+    
+    if (Oran_NrbPerPacket > maxNrbPerPacket)
+    {
+        Oran_NrbPerPacket = maxNrbPerPacket;
+    }
+}
 
 void ORAN::printVariables()
 {
     std::cout<<"\n";
-    std::cout <<"******************************************************************************************\n";
     std::cout <<"************************************ ORAN config  Variables ***************************************\n";
     std::cout <<"Line Rate: " << LineRate << " Gbps\n";
     std::cout <<"Capture Size: " << CaptureSizeMs << " ms\n";
@@ -437,6 +459,7 @@ void ORAN::printVariables()
     std::cout <<"Packets Per Sec: " << packetsPerSec << "\n";
     std::cout <<"Total Num Of Oran Packets: " << totalNumOfOranPackets << "\n";
     std::cout <<"Total Num Of Bytes: " << totalNumOfBytes << "\n";
+    std::cout<<"\n";
 
 }
 
@@ -444,4 +467,10 @@ void ORAN::printVariables()
 uint32_t ORAN::getTotalNumOfPackets() const
 {
     return totalNumOfOranPackets;
+}
+
+void ORAN::setMaxPacketSize(uint64_t MaxPacketSize)
+{
+    this->MaxPacketSize = MaxPacketSize;
+    printVariables();
 }

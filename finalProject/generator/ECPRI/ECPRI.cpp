@@ -8,24 +8,20 @@
 
 /*
 * @brief Constructor
-* it initializes the payload size based on the MaxECPRIPacketSize
-* @param SCS: Subcarrier spacing
 */   
-ECPRI::ECPRI(uint64_t MaxECPRIPacketSize): 
-MaxECPRIPacketSize(MaxECPRIPacketSize)
-{
-    MaxORANPacketSize = MaxECPRIPacketSize - ECPRIPacketHeaderBytes;
-    ORAN oran(MaxORANPacketSize); // Create an ORAN instance
-    totalNumOfPackets = oran.getTotalNumOfPackets();
-    
-}
-
 ECPRI::ECPRI()
 {
-    ORAN oran(MaxORANPacketSize); // Create an ORAN instance
-    totalNumOfPackets = oran.getTotalNumOfPackets();
+
 }
 
+void ECPRI::setMaxPacketSize(uint64_t MaxECPRIPacketSize)
+{
+    this->MaxECPRIPacketSize = MaxECPRIPacketSize;
+    MaxORANPacketSize = MaxECPRIPacketSize - ECPRIPacketHeaderBytes;
+    oran.setMaxPacketSize(MaxORANPacketSize);
+    totalNumOfPackets = oran.getTotalNumOfPackets();
+    printVariables();
+}
 
 std::vector<uint8_t> ECPRI::createECPRIPacket()
 {
@@ -97,9 +93,9 @@ void ECPRI::printPacket(const std::vector<uint8_t>& packet)
 void ECPRI::printVariables()
 {
     std::cout<<"\n";
-    std::cout <<"******************************************************************************************\n";
-    std::cout << "ECPRI variables: " << "\n";
+    std::cout <<"*************************************** ECPRI ***************************************************\n";
     std::cout << "MaxECPRIPacketSize: " << MaxECPRIPacketSize << "\n";
+    std::cout<<"\n";
 }
 
 

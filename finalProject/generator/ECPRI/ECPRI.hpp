@@ -22,6 +22,9 @@ class ECPRI {
 
         /*getters*/
         uint32_t getTotalNumOfPackets() const; //Get the total number of packets
+
+        /*setters*/
+        void setMaxPacketSize(uint64_t MaxECPRIPacketSize); //Set the maximum packet size
     
     private:
     /*constans*/

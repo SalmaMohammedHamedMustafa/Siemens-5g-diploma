@@ -23,6 +23,9 @@ class ORAN {
         /*getters*/
         uint32_t getTotalNumOfPackets() const; //get the total number of packets 
 
+        /*setters*/
+        void setMaxPacketSize(uint64_t MaxPacketSize); //set the maximum packet size
+
 
     private:
     /*constans*/
@@ -45,6 +48,9 @@ class ORAN {
     static constexpr uint8_t maxSubframeId = 9; //Maximum subframe ID
     static constexpr uint8_t maxSlotId = 7; //Maximum slot ID
     static constexpr uint8_t maxSymbolId = 13; //Maximum symbol ID
+
+    static constexpr uint8_t maxNrbPerPacket = 30; //Maximum number of resource blocks per packet to avoid fragmentation
+
 
 
     /*variables*/
@@ -90,7 +96,10 @@ class ORAN {
     void parseConfigFile(); //parse the configuration file
     void findSlotsPerSubFrame(); //find the number of slots per subframe
     void parseIQData(std::vector<uint8_t> &packet); //parse the IQ data from the file
+    void generateRandomPayload(std::vector<uint8_t> &packet); //generate random payload
     int16_t convertTo16Bit(int value); 
+    void handleFragmentation(); 
+
     /*calculations*/
     void calculate(); //calculate all the variables
     void calceBytesPerPacket(); //calculate the number of bytes per packet
@@ -109,6 +118,8 @@ class ORAN {
     void updateSubframeId(); //update the subframe ID
     void updateSlotId(); //update the slot ID
     void updateSymbolId(); //update the symbol ID
+
+
 
 
 

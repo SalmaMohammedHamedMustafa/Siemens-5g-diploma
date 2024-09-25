@@ -5,7 +5,7 @@ int main() {
     // IP address and port of the server
     char serverIp[] = "192.168.1.5";  // Replace with the actual server IP address
     int serverPort = 8080;          // Replace with the actual port number
-    const char* filePath = "received_file.txt";  // Path where the received file will be saved
+    const char* filePath = "../received_file.txt";  // Path where the received file will be saved
 
     try {
         // Initialize client socket with server IP and port
