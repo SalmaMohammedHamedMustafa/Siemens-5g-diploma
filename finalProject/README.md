@@ -25,3 +25,13 @@ cd build
 cmake -G "MinGW Makefiles" ..
 mingw32-make
 ```
+# How to run?
+## for the generator
+```bash
+./EthernetApp
+```
+## for the reciever
+- wait for the generator to be waiting for connections
+```bash 
+./ClientApp
+```
