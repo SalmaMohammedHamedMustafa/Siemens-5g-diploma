@@ -1,4 +1,5 @@
 #include "socket_handler/socket_handler.hpp"
+#include "parser/parser.hpp"
 #include <iostream>
 
 int main() {
@@ -25,6 +26,14 @@ int main() {
         std::cerr << "Error: " << e.what() << std::endl;
         return -1;
     }
+
+    Parser parser;
+    std::cout << "Parsing the received file..." << std::endl;
+    parser.parse(filePath, "../raw_data.txt");
+    std::cout << "Parsing complete. Results saved to output.txt" << std::endl;
+    std::cout << "Checking CRC for each packet..." << std::endl;
+    parser.CRCCheck(filePath, "../CRC_results.txt");
+    std::cout << "CRC check complete. Results saved to CRC_results.txt" << std::endl;
 
     return 0;
 }

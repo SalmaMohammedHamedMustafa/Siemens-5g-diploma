@@ -55,7 +55,7 @@ class ORAN {
 
 
     /*variables*/
-    std::string configFilePath = "second_milstone.txt"; // path to the configuration file
+    std::string configFilePath = "../ORAN/second_milstone.txt"; // path to the configuration file
     /*config variables*/
     uint32_t LineRate; // in GB
     uint32_t CaptureSizeMs; // in ms
