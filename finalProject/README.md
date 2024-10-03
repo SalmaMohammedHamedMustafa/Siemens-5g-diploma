@@ -5,7 +5,7 @@
 # reciever
 - recieves the packets file
 - parses the raw data
-- checks the CRC and bumps the results to a file
+- checks the CRC and dumps the results to a file
 
 # How to build?
 - go to the program folder/directory 
