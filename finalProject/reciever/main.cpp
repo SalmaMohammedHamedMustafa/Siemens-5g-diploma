@@ -28,7 +28,7 @@ int main() {
         std::cout << "Receiving file from server..." << std::endl;
         clientSocket.ReceiveFileData(filePath);
 
-        std::cout << "File received and saved to " << filePath << std::endl;
+        std::cout << "File received and saved to :" << filePath << std::endl;
 
     } catch (const std::runtime_error& e) {
         std::cerr << "Error: " << e.what() << std::endl;
