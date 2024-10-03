@@ -1,16 +1,24 @@
 #include "socket_handler/socket_handler.hpp"
 #include "parser/parser.hpp"
 #include <iostream>
+#include <string>
 
 int main() {
-    // IP address and port of the server
-    char serverIp[] = "192.168.1.5";  // Replace with the actual server IP address
-    int serverPort = 8080;          // Replace with the actual port number
+    // Variables for IP address and port of the server
+    std::string serverIp;  // Use std::string for easier input handling
+    int serverPort;
+
+    // Prompt user for IP address and port
+    std::cout << "Enter server IP address: ";
+    std::cin >> serverIp;  // Read IP address from user input
+    std::cout << "Enter server port: ";
+    std::cin >> serverPort;  // Read port number from user input
+
     const char* filePath = "../received_file.txt";  // Path where the received file will be saved
 
     try {
         // Initialize client socket with server IP and port
-        TcpClientSocket clientSocket(serverIp);
+        TcpClientSocket clientSocket(const_cast<char*>(serverIp.c_str()));  // Convert const char* to char*
 
         // Connect to the server
         clientSocket.ConnectToServer();
@@ -30,7 +38,7 @@ int main() {
     Parser parser;
     std::cout << "Parsing the received file..." << std::endl;
     parser.parse(filePath, "../raw_data.txt");
-    std::cout << "Parsing complete. Results saved to output.txt" << std::endl;
+    std::cout << "Parsing complete. Results saved to raw_data.txt" << std::endl;
     std::cout << "Checking CRC for each packet..." << std::endl;
     parser.CRCCheck(filePath, "../CRC_results.txt");
     std::cout << "CRC check complete. Results saved to CRC_results.txt" << std::endl;
