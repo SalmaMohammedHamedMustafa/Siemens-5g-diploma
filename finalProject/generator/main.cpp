@@ -34,7 +34,7 @@ void sendFile() {
     server.ListenForConnections(1);  // 1 indicates the maximum number of clients in the queue
 
     // Wait for the client to connect
-    std::cout << "Waiting for a client to connect..." << std::endl;
+    std::cout << "Waiting for a client to connect on port 8080 and the device IP address..." << std::endl;
 
     int clientSocket = server.AcceptConnection();
     
